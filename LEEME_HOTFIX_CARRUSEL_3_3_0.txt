@@ -1,0 +1,10 @@
+SiasCloud ERP 3.3.0 · Hotfix visual de carrusel
+
+- Mantiene el hero a pantalla completa.
+- Reduce el recorte/zoom agresivo de las imágenes.
+- Usa una copia desenfocada como fondo para conservar cobertura visual.
+- Muestra la imagen principal con object-fit: contain y encuadre natural.
+- Mantiene botones, textos, navegación, zoom y lógica comercial sin cambios.
+- Ajuste responsive para escritorio, tablet y móvil.
+
+No requiere SQL ni redeploy de Supabase.

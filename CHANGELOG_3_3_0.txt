@@ -17,3 +17,5 @@ OBJETIVO DE ESTA RELEASE
 - Eliminar la dependencia de hotfix sueltos.
 - Entregar un único paquete desplegable.
 - Reducir errores por mezclar versiones o SQL parciales.
+
+- Hotfix POS 2026-10-05: se aumentó el aire vertical entre las tarjetas del catálogo y la franja inferior de sesión, solo en escritorio/tablet grande.

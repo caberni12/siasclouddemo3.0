@@ -327,3 +327,59 @@ main{max-width:1288px;margin:0 auto;padding:0 24px}
 .product-photo button{background:#fff!important;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--store-primary) 10%, #edf1f5)!important;}
 .product-placeholder{background:#fff!important;}
 #footer-contacto{scroll-margin-top:120px}
+
+/* 3.3.0 hotfix · carrusel con encuadre natural sin recorte agresivo */
+.hero-slide-visual{
+  background:#0d1729!important;
+  isolation:isolate;
+}
+.hero-slide-visual .hero-backdrop{
+  position:absolute!important;
+  inset:-7%!important;
+  width:114%!important;
+  height:114%!important;
+  object-fit:cover!important;
+  object-position:center!important;
+  filter:blur(28px) saturate(.9) brightness(.5)!important;
+  transform:scale(1.03)!important;
+  opacity:.72!important;
+  z-index:0!important;
+  pointer-events:none!important;
+}
+.hero-slide-visual button{
+  position:relative!important;
+  z-index:1!important;
+  display:grid!important;
+  place-items:center!important;
+  width:100%!important;
+  height:100%!important;
+  padding:clamp(24px,4vh,54px) clamp(26px,4vw,72px)!important;
+  box-sizing:border-box!important;
+}
+.hero-slide-visual img.hero-main-image{
+  position:relative!important;
+  width:100%!important;
+  height:100%!important;
+  max-width:94%!important;
+  max-height:88%!important;
+  object-fit:contain!important;
+  object-position:center!important;
+  filter:saturate(1.02) contrast(1.02) brightness(.96)!important;
+  border-radius:22px!important;
+  box-shadow:0 24px 60px rgba(0,0,0,.24)!important;
+  background:rgba(255,255,255,.04)!important;
+}
+.hero-slide-visual::after{
+  z-index:2!important;
+  pointer-events:none!important;
+  background:linear-gradient(90deg,rgba(7,11,20,.66) 0%,rgba(7,11,20,.38) 30%,rgba(7,11,20,.08) 64%,rgba(7,11,20,.12) 100%)!important;
+}
+@media(max-width:900px){
+  .hero-slide-visual button{padding:24px 20px 88px!important}
+  .hero-slide-visual img.hero-main-image{max-width:96%!important;max-height:84%!important;border-radius:18px!important}
+}
+@media(max-width:720px){
+  .hero-slide-visual .hero-backdrop{filter:blur(20px) saturate(.88) brightness(.48)!important}
+  .hero-slide-visual button{padding:18px 12px 116px!important}
+  .hero-slide-visual img.hero-main-image{max-width:98%!important;max-height:78%!important;border-radius:16px!important}
+}

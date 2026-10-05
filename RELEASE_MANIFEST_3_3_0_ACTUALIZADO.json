@@ -1,0 +1,107 @@
+{
+  "release": "SiasCloud ERP 3.3.0",
+  "package": "Actualizada hasta 2026-10-05 · hotfix aire POS",
+  "base": "3.3.0 consolidada + carrusel encuadre natural + aire visual POS",
+  "supabase_demo_images": {
+    "bucket": "siascloud-public",
+    "folder": "products/",
+    "count": 50
+  },
+  "critical_files": [
+    {
+      "file": "index.html",
+      "bytes": 9244,
+      "sha256": "27202f2c566832906248f65608723b8df523edd5b9c9b7780d17e4da92199c90"
+    },
+    {
+      "file": "portal.html",
+      "bytes": 4638,
+      "sha256": "7f9fdc428389ce3341b23f3f605e6e3d3774ce997cf306cfaf3f55a3a2f9c1c7"
+    },
+    {
+      "file": "tienda.html",
+      "bytes": 12527,
+      "sha256": "206cbd022462aa68279ac34b9bb96ad84280b65f8ae6b0329bca5042ca72dbd2"
+    },
+    {
+      "file": "config.js",
+      "bytes": 1129,
+      "sha256": "62267854fcb6112391a920248f15cdf6cc6e3442a885cc3007c47bd1d2d1c5e2"
+    },
+    {
+      "file": "app.js",
+      "bytes": 147339,
+      "sha256": "95f2bf70ef1d02648b07e1ed3f1815f8872c7fc176c08100d51f9bf5c32ea005"
+    },
+    {
+      "file": "operations.js",
+      "bytes": 98479,
+      "sha256": "7d0d51910ae856fec27979145c8f47f4ead52c9726711b528b09242baee9afc5"
+    },
+    {
+      "file": "pos.js",
+      "bytes": 29222,
+      "sha256": "3706d9dc752cea8a3349ed566ddadb53c98e48d4bd27db50d66aa4335b0329f9"
+    },
+    {
+      "file": "portal.js",
+      "bytes": 36603,
+      "sha256": "0200af063f8ac2aab3046cf131f89315786ed6f9d9f0093aae476bc3c2720c6f"
+    },
+    {
+      "file": "tienda.js",
+      "bytes": 28681,
+      "sha256": "2731fcb3cbf5e39877dc2d6fd600b99438a6f138def131d9c8b892d01fb98e94"
+    },
+    {
+      "file": "styles.css",
+      "bytes": 63009,
+      "sha256": "621cfb0cbb29909d7289841315487a63a96cf2861ac50312d862fa9a799d45f6"
+    },
+    {
+      "file": "operations.css",
+      "bytes": 17797,
+      "sha256": "b3f2beb07dc75b08cc0e913ae4d1acd97a2550647aa7badb33733be8aabf947e"
+    },
+    {
+      "file": "pos.css",
+      "bytes": 10259,
+      "sha256": "ea1375d5ab104740791c1c505d3c0603ad52227a76e04099a3ccc99846694692"
+    },
+    {
+      "file": "portal.css",
+      "bytes": 22665,
+      "sha256": "84ab578ec4d5843d988c5aa99adc7b3cc4d12a7a3763490c093e3e19c6d7f0cf"
+    },
+    {
+      "file": "tienda.css",
+      "bytes": 38427,
+      "sha256": "bcb98a3fb2bfccdb0dd59025e036b921f157252a5cd380ac01122d2abf93d8e8"
+    },
+    {
+      "file": "supabase/functions/siascloud-erp/index.ts",
+      "bytes": 227690,
+      "sha256": "2815f2aebb2e856a43cc33ba54018e428b2a52d4c2f7dda46fd55e3569c89ed5"
+    },
+    {
+      "file": "SQL_MAESTRO_SIASCLOUD_V3_3_0.sql",
+      "bytes": 385419,
+      "sha256": "df2aca9c1b43e483261debf120b756c25d5bb64512f72d81f80e285092d6439a"
+    },
+    {
+      "file": "MIGRACION_3_2_16_A_3_3_0.sql",
+      "bytes": 4125,
+      "sha256": "0ff797384494443dc135f169b01663d825dc13a304842ac0e210bc9dabae0826"
+    },
+    {
+      "file": "ACTUALIZACION_IMAGENES_DEMO_SUPABASE.sql",
+      "bytes": 20280,
+      "sha256": "0981cc50822c86039ba249f6b3287455dc127a3c4b5efa7afeb0c0295e5eb3c7"
+    }
+  ],
+  "hotfix_pos_air": {
+    "desktop_min_height": "min(76vh, 720px)",
+    "catalog_bottom_padding": "clamp(34px, 5vh, 62px)",
+    "mobile_behavior": "sin cambios bajo 821px"
+  }
+}

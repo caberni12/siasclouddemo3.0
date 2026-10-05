@@ -83,7 +83,7 @@
     const container = $('#storeHeroCarousel');
     const fallbackImage = state.store?.hero_image || '';
     if(!items.length && fallbackImage){
-      container.innerHTML = `<div class="hero-slide"><div class="hero-slide-copy"><small>${E(state.store?.title||'TIENDA')}</small><h3>${E(state.store?.hero_title || 'Descubre nuestro catálogo')}</h3><p>${E(state.store?.hero_text || 'Explora nuestros productos, destacados y campañas disponibles.')}</p><div class="hero-slide-actions"><a class="button primary" href="#catalogo">Ver catálogo</a></div></div><div class="hero-slide-visual"><button type="button" data-hero-image="standalone"><img src="${E(fallbackImage)}" alt="${E(state.store?.title||'Tienda')}"></button></div></div>`;
+      container.innerHTML = `<div class="hero-slide"><div class="hero-slide-copy"><small>${E(state.store?.title||'TIENDA')}</small><h3>${E(state.store?.hero_title || 'Descubre nuestro catálogo')}</h3><p>${E(state.store?.hero_text || 'Explora nuestros productos, destacados y campañas disponibles.')}</p><div class="hero-slide-actions"><a class="button primary" href="#catalogo">Ver catálogo</a></div></div><div class="hero-slide-visual"><img class="hero-backdrop" src="${E(fallbackImage)}" alt="" aria-hidden="true"><button type="button" data-hero-image="standalone"><img class="hero-main-image" src="${E(fallbackImage)}" alt="${E(state.store?.title||'Tienda')}"></button></div></div>`;
       return;
     }
     if(!items.length){
@@ -106,7 +106,7 @@
             </div>
             <div class="hero-slide-visual">
               ${p.featured ? '<span class="hero-slide-badge">Destacado</span>' : ''}
-              ${p.image_url ? `<button type="button" data-product-image="${E(p.id)}" aria-label="Ampliar imagen de ${E(p.name)}"><img src="${E(p.image_url)}" alt="${E(p.name)}"></button>` : ''}
+              ${p.image_url ? `<img class="hero-backdrop" src="${E(p.image_url)}" alt="" aria-hidden="true"><button type="button" data-product-image="${E(p.id)}" aria-label="Ampliar imagen de ${E(p.name)}"><img class="hero-main-image" src="${E(p.image_url)}" alt="${E(p.name)}"></button>` : ''}
             </div>
           </article>`).join('')}
       </div>

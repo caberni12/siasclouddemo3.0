@@ -18,3 +18,29 @@
 .pos-product-view:hover{background:#edf6ff}
 .pos-product-view:focus-visible{outline:2px solid var(--pos-blue);outline-offset:1px}
 @media(max-width:440px){.pos-product-view{top:36px;right:5px;padding:4px 7px}}
+
+/* 3.3.0 hotfix · más aire visual antes de la franja inferior del POS
+   Mantiene la sesión azul más abajo en escritorio sin alargar innecesariamente móvil. */
+@media (min-width:821px){
+  .pos-layout.pos-reference{
+    min-height:min(76vh,720px);
+  }
+  .pos-reference .pos-sale,
+  .pos-reference .pos-catalog{
+    min-height:min(76vh,720px);
+  }
+  .pos-reference .pos-catalog{
+    padding-bottom:clamp(34px,5vh,62px);
+  }
+}
+
+@media (min-width:821px) and (max-height:620px){
+  .pos-layout.pos-reference,
+  .pos-reference .pos-sale,
+  .pos-reference .pos-catalog{
+    min-height:76vh;
+  }
+  .pos-reference .pos-catalog{
+    padding-bottom:28px;
+  }
+}
