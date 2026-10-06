@@ -1,0 +1,12 @@
+SiasCloud 3.3.0 · Hotfix DTE / Guías / stock / progreso
+
+Cambios:
+1. Emisión DTE muestra barra de progreso bloqueante hasta que el DTE/PDF queda listo. No agrega esperas artificiales.
+2. Guía DTE 52 incluye los 9 motivos IndTraslado documentados por Facturacion.cl: venta, venta por efectuar, consignación, entrega gratuita, traslado interno, otros no venta, devolución, traslado exportación y venta exportación.
+3. Se agregan datos de transporte requeridos por el manual: patente, patente carro, RUT transportista, RUT/nombre chofer, destino, fecha/hora salida y fecha llegada.
+4. Corrección portal PDF: Authorization usa el token exactamente como indica el manual REST, sin prefijo Bearer.
+5. Política global de venta sin stock también cubre VENTA_MAYORISTA.
+6. Imprimir/reabrir un DTE ya EMITIDO nunca vuelve a mover ni validar stock.
+7. Facturacion.cl no se modifica: no se cambian endpoints, credenciales, folios ni protocolo de emisión.
+
+IMPORTANTE: ejecutar una sola vez HOTFIX_DTE_GUIA_STOCK_PROGRESO_20261006.sql en Supabase para instalaciones existentes.

@@ -1,7 +1,7 @@
 {
   "release": "SiasCloud ERP 3.3.0",
-  "package": "Actualizada hasta 2026-10-05 · hotfix aire POS",
-  "base": "3.3.0 consolidada + carrusel encuadre natural + aire visual POS",
+  "package": "Impresión sin vistas intermedias: POS, documentos tributarios e internos · 2026-10-06",
+  "base": "3.3.0 POS acceso rápido Cobrar; impresión acelerada sin cambiar backend ni folios",
   "supabase_demo_images": {
     "bucket": "siascloud-public",
     "folder": "products/",
@@ -10,8 +10,8 @@
   "critical_files": [
     {
       "file": "index.html",
-      "bytes": 9244,
-      "sha256": "27202f2c566832906248f65608723b8df523edd5b9c9b7780d17e4da92199c90"
+      "bytes": 9449,
+      "sha256": "fc3c1b96dbb8e2489126c168d09a0932073dd3745aafbbd1c956465ad28a3eb4"
     },
     {
       "file": "portal.html",
@@ -30,18 +30,18 @@
     },
     {
       "file": "app.js",
-      "bytes": 147339,
-      "sha256": "95f2bf70ef1d02648b07e1ed3f1815f8872c7fc176c08100d51f9bf5c32ea005"
+      "bytes": 146558,
+      "sha256": "85dba311dd7f116a42b65b3bc999090bf3faef1a5f4366bba0e699ea38b2a993"
     },
     {
       "file": "operations.js",
-      "bytes": 98479,
-      "sha256": "7d0d51910ae856fec27979145c8f47f4ead52c9726711b528b09242baee9afc5"
+      "bytes": 100105,
+      "sha256": "0674d6a70c9c15fb4286565acdde2edd63246ead62a74cfc3334e0e58f50731a"
     },
     {
       "file": "pos.js",
-      "bytes": 29222,
-      "sha256": "3706d9dc752cea8a3349ed566ddadb53c98e48d4bd27db50d66aa4335b0329f9"
+      "bytes": 37121,
+      "sha256": "4ad63457a49c8e67053de07c628e82c85a6ccbfa01ae5f839c1f701813c2bb5b"
     },
     {
       "file": "portal.js",
@@ -60,13 +60,13 @@
     },
     {
       "file": "operations.css",
-      "bytes": 17797,
-      "sha256": "b3f2beb07dc75b08cc0e913ae4d1acd97a2550647aa7badb33733be8aabf947e"
+      "bytes": 19859,
+      "sha256": "fa899faba9d8e79d0d61691adfd5a63cc2d57f3c223e89759e6cda259ac956ee"
     },
     {
       "file": "pos.css",
-      "bytes": 10259,
-      "sha256": "ea1375d5ab104740791c1c505d3c0603ad52227a76e04099a3ccc99846694692"
+      "bytes": 15449,
+      "sha256": "cb83bc7624214cf21bc347fe07d32b67155eaa223c8abc4986ce1966df99e4f9"
     },
     {
       "file": "portal.css",
@@ -97,11 +97,76 @@
       "file": "ACTUALIZACION_IMAGENES_DEMO_SUPABASE.sql",
       "bytes": 20280,
       "sha256": "0981cc50822c86039ba249f6b3287455dc127a3c4b5efa7afeb0c0295e5eb3c7"
+    },
+    {
+      "file": "dte-pdf.js",
+      "bytes": 11791,
+      "sha256": "61939822a4c362807f6b73e63f4680f48d1612ee7d01043393dfb5c747cd756a"
+    },
+    {
+      "file": "retail.js",
+      "bytes": 42856,
+      "sha256": "de68f45b845f9bf4b538d14669781acbd864468d43530eca439dae806747358a"
     }
   ],
-  "hotfix_pos_air": {
-    "desktop_min_height": "min(76vh, 720px)",
-    "catalog_bottom_padding": "clamp(34px, 5vh, 62px)",
-    "mobile_behavior": "sin cambios bajo 821px"
+  "pos_layout_fix": {
+    "date": "2026-10-05",
+    "cache_bust": "3.3.0-direct-print-20261006",
+    "catalog_to_footer_gap_px": 0,
+    "desktop_min_width_px": 821,
+    "validation": "Chromium; real POS modules; 50 mock products; 15 scenarios; quick checkout on desktop and mobile; shared busy state and F4 verified",
+    "catalog_starts_at_top": true,
+    "toolbar_and_notices_column": "inside left ticket",
+    "header_search": {
+      "minimum_viewport_width_px": 1101,
+      "minimum_free_header_width_px": 200,
+      "narrow_window_behavior": "search returns to POS toolbar"
+    },
+    "header_to_panels_gap_px": 0,
+    "ticket_and_catalog_titles_aligned": true,
+    "quick_checkout": {
+      "button_id": "posChargeQuick",
+      "desktop_location": "top of left ticket beside compact Caja",
+      "mobile_location": "POS top toolbar before catalog",
+      "synchronized_total": true,
+      "keyboard_shortcut": "F4",
+      "uses_existing_checkout": true,
+      "shared_preparation_lock": true,
+      "disabled_when": [
+        "cash session closed",
+        "pending checkout",
+        "missing POS_MANAGE permission"
+      ]
+    }
+  },
+  "hotfix_2026_10_06": {
+    "cache_bust": "3.3.0-direct-print-20261006",
+    "direct_print_internal": true,
+    "direct_print_dte_thermal": true,
+    "direct_print_dte_a4_best_effort": true,
+    "reuses_emitted_dte": true,
+    "billing_header_compact": true,
+    "pos_card_click_delegated": true,
+    "unit_product_one_click_feedback": true
+  },
+  "printing_flow_fix": {
+    "date": "2026-10-06",
+    "cache_bust": "3.3.0-impresion-2-pasos-20261006",
+    "pos_actions": [
+      "Cobrar",
+      "Cobrar e imprimir"
+    ],
+    "automatic_browser_print_request": true,
+    "intermediate_erp_preview": false,
+    "popup_required": false,
+    "native_printer_confirmation": true,
+    "silent_physical_printing": false,
+    "scope": "tax, internal confirmed documents, cash closing and reprints",
+    "transaction_request_reused_on_recovery": true,
+    "backend_sql_unchanged": true,
+    "qa_print_scenarios": 35,
+    "qa_layout_scenarios": 15,
+    "qa_uses_mock_api_and_print": true,
+    "qa_a4_load_event_simulated": true
   }
 }

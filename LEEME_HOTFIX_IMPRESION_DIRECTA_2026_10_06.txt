@@ -1,0 +1,43 @@
+SIASCLOUD ERP 3.3.0 · IMPRESIÓN SIN VISTAS INTERMEDIAS · 2026-10-06
+
+FLUJO DEL POS CON LA VENTA LISTA
+1. Pulsa Cobrar (arriba, abajo o F4).
+2. Revisa el pago y pulsa Cobrar e imprimir.
+SiasCloud registra la venta, emite el DTE cuando corresponda y solicita el diálogo de impresión del navegador automáticamente. No abre otra pestaña ni pide Imprimir dentro de un visor del ERP.
+El diálogo del navegador o del sistema conserva la confirmación de impresora. Este paquete no instala impresión silenciosa ni configura una impresora física.
+
+TIPO Y PAPEL
+El tipo de documento y A4 / 80 mm / 58 mm vienen de la configuración guardada.
+El formulario muestra el resumen; Cambiar despliega las opciones sólo cuando se necesitan. El teléfono se conserva con la emisión.
+La emisión y preparación del documento se inician antes de refrescar el catálogo. Las consultas de créditos, formato y receptor se preparan en paralelo.
+
+DOCUMENTOS TRIBUTARIOS E INTERNOS
+- Boletas, facturas, documentos exentos, guías, notas de crédito y débito solicitan impresión al quedar emitidos.
+- Las reimpresiones usan el DTE emitido; conservan el mismo folio.
+- El A4 utiliza el PDF oficial del proveedor. El térmico utiliza el ticket oficial del mismo DTE.
+- Los documentos internos confirmados solicitan impresión al guardarse o confirmarse, sin abrir su vista de consulta.
+- Cotizaciones, pedidos, solicitudes, ventas, mayoristas, compras, ingresos, salidas, traslados y guías internas usan el papel configurado.
+- Los borradores siguen disponibles para edición; no se imprime un documento final automáticamente al guardar un borrador.
+- El cierre de caja solicita impresión del arqueo final. La lista de cajas tiene Imprimir para acceder directamente al arqueo.
+- Un aviso pequeño permite reimprimir. No es un paso obligatorio y desaparece automáticamente.
+
+RECUPERACIÓN Y CONTROLES
+- Un cobro pendiente guarda la misma solicitud y las preferencias de impresión para recuperar la venta sin duplicarla.
+- Una falla al obtener el ticket permite consultar el DTE ya emitido; no vuelve a emitir.
+- Una emisión no confirmada requiere revisar el historial; no se reenvía automáticamente.
+- Cambiar de empresa durante el cobro no imprime en la empresa nueva ni borra su ticket.
+- Venta sin stock ocupa un botón pequeño de información, sin cambiar la política de stock.
+- Los productos UN se agregan con un clic, incluso si permiten fracciones o tienen empaque. + Cantidad permite elegir cantidades o empaque.
+- Los productos por peso siguen solicitando el peso; no recargan todo el POS al agregarse.
+- Se conservan el buscador del encabezado, catálogo alineado, acceso rápido Cobrar y delegación de clics de tarjetas.
+
+DESPLIEGUE SOBRE EL ZIP ADJUNTO
+Reemplaza los archivos de la raíz del frontend por los de este paquete y recarga completamente el navegador. Este ajuste cambia:
+index.html, app.js, operations.js, operations.css, dte-pdf.js, pos.js, pos.css y retail.js.
+Las referencias de caché de estos archivos usan 3.3.0-impresion-2-pasos-20261006.
+No hace falta ejecutar SQL ni volver a desplegar Supabase para aplicar este ajuste. El backend, SQL y configuración se conservaron idénticos al ZIP adjunto.
+El paquete incluye todos los archivos originales y mantiene supabase/functions/siascloud-erp/index.ts como único archivo de esa función.
+
+VALIDACIÓN
+35 escenarios de cobro/documentos/recuperación y 15 escenarios del diseño POS en Chromium con API y llamadas de impresión simuladas. Sintaxis de los 19 JavaScript, referencias HTML, integridad del ZIP y hashes comprobados.
+El PDF A4 oficial se validó como PDF y se simuló su evento de carga en el navegador de pruebas, que no incluye visor PDF. No se realizaron cobros, emisiones tributarias ni impresión física en producción.

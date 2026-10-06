@@ -19,28 +19,222 @@
 .pos-product-view:focus-visible{outline:2px solid var(--pos-blue);outline-offset:1px}
 @media(max-width:440px){.pos-product-view{top:36px;right:5px;padding:4px 7px}}
 
-/* 3.3.0 hotfix · más aire visual antes de la franja inferior del POS
-   Mantiene la sesión azul más abajo en escritorio sin alargar innecesariamente móvil. */
+.pos-header-search{
+  display:flex;
+  flex:1 1 auto;
+  min-width:200px;
+  max-width:700px;
+}
+.pos-header-search .pos-search-wrap{
+  padding:0 10px;
+  gap:8px;
+  background:var(--primary-soft);
+  border:1px solid var(--border);
+  color:var(--muted);
+}
+.pos-header-search .pos-search{
+  width:100%;
+  margin:0;
+  min-height:36px;
+  padding:8px 0;
+  background:transparent;
+  border:0;
+  box-shadow:none;
+  color:var(--text);
+  font-size:12px;
+}
+.pos-header-search .pos-search::placeholder{color:var(--muted)}
+.pos-header-search .pos-search-wrap:focus-within{border-color:var(--primary)}
+
+.pos-quick-actions{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:8px;
+  min-width:0;
+  margin-left:auto;
+}
+.pos-quick-actions>.btn{
+  min-height:34px;
+  padding:7px 10px;
+  font-size:12px;
+  white-space:nowrap;
+}
+.pos-quick-actions>#posCash{
+  background:#ffffff20;
+  border-color:#ffffff55;
+  color:#fff;
+}
+.pos-quick-actions>.pos-charge-quick{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  background:var(--pos-green);
+  border-color:var(--pos-green);
+  color:#fff;
+}
+.pos-charge-quick strong{font-size:13px}
+.pos-charge-quick kbd{
+  padding:2px 4px;
+  border:1px solid #ffffff66;
+  border-radius:4px;
+  font:inherit;
+  font-size:10px;
+}
+.pos-ticket-meta{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:flex-end;
+  gap:6px;
+}
+.pos-stock-policy{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  min-height:24px;
+  padding:4px 7px;
+  border:1px solid #f1d7a9;
+  border-radius:7px;
+  background:#fff7e8;
+  color:#945200;
+  font:600 10px/1.2 system-ui,sans-serif;
+  white-space:nowrap;
+  cursor:pointer;
+}
+.pos-stock-policy:focus-visible{outline:2px solid var(--pos-blue);outline-offset:2px}
+.pos-capture-extra{padding:2px 0;border:0;background:transparent;color:var(--pos-blue);font:600 9px/1.4 system-ui,sans-serif;cursor:pointer;white-space:nowrap}
+.pos-capture-extra:focus-visible{outline:2px solid var(--pos-blue);outline-offset:2px}
+
+/* 3.3.0 · Ticket y catálogo alineados desde arriba hasta la franja de caja.
+   Buscador en el encabezado y avisos compactos dentro del ticket.
+   La contención de tamaño evita que los 50 productos agranden la página. */
 @media (min-width:821px){
+  #content:has(>.pos-workspace){padding-top:0}
+  .pos-workspace{
+    display:grid;
+    grid-template-columns:minmax(340px,.82fr) minmax(0,1.18fr);
+    grid-template-rows:minmax(min-content,1fr) auto;
+    height:calc(100vh - var(--topbar-h,72px) - 22px);
+    height:calc(100dvh - var(--topbar-h,72px) - 22px);
+    min-height:min-content;
+  }
+  .pos-ticket-head{
+    flex-wrap:wrap;
+    gap:8px;
+    align-items:flex-start;
+  }
+  .pos-ticket-head>div:first-child{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+  }
+  .pos-ticket-head h3{order:-1;margin:0}
+  .pos-ticket-head>.pos-topbar{
+    display:flex;
+    flex-wrap:wrap;
+    flex-basis:100%;
+    gap:8px;
+    padding:0;
+    min-width:0;
+    background:transparent;
+  }
+  .pos-topbar>div:first-child{
+    display:none;
+  }
+  .pos-topbar .pos-mark{font-size:20px}
+  .pos-topbar small{display:none}
+  .pos-topbar .pos-quick-actions>.btn{
+    min-height:30px;
+    padding:6px 10px;
+    font-size:11px;
+  }
+  .pos-topbar .pos-quick-actions>#posCash{background:var(--pos-blue);border-color:var(--pos-blue)}
+  .pos-topbar>.pos-search-wrap{
+    flex:1 1 180px;
+    padding:0 9px;
+    gap:7px;
+    background:var(--primary-soft);
+    border-color:var(--border);
+    color:var(--muted);
+  }
+  .pos-topbar .pos-search{
+    min-height:36px;
+    padding:8px 0;
+    font-size:12px;
+    color:var(--text);
+  }
+  .pos-topbar .pos-search::placeholder{color:var(--muted)}
+  .pos-sale>.pos-pending-note{
+    margin:0 0 12px;
+    padding:10px;
+    font-size:11px;
+  }
+  .pos-pending-note p{margin:5px 0 8px}
+  .pos-pending-note .retail-actions{flex-wrap:wrap;gap:6px}
+  .pos-workspace>.pos-session{
+    grid-column:1/-1;
+    grid-row:2;
+  }
   .pos-layout.pos-reference{
-    min-height:min(76vh,720px);
+    display:contents;
   }
   .pos-reference .pos-sale,
   .pos-reference .pos-catalog{
-    min-height:min(76vh,720px);
+    min-height:0;
+    height:auto;
+    align-self:stretch;
+  }
+  .pos-reference .pos-sale{
+    grid-column:1;
+    grid-row:1;
+    border-right:0;
+  }
+  .pos-reference .pos-lines{
+    min-height:120px;
+    max-height:32vh;
   }
   .pos-reference .pos-catalog{
-    padding-bottom:clamp(34px,5vh,62px);
+    grid-column:2;
+    grid-row:1;
+    display:flex;
+    flex-direction:column;
+    padding-bottom:0;
+    border-left:1px solid var(--border);
+  }
+  .pos-reference .pos-catalog-head,
+  .pos-reference .pos-categories{
+    flex-shrink:0;
+  }
+  .pos-reference .pos-catalog-head{align-items:flex-start}
+  .pos-reference .pos-products{
+    flex:1 1 0px;
+    height:0;
+    min-height:0;
+    max-height:none;
+    contain:size;
+    grid-auto-rows:max-content;
+    align-content:start;
+    padding-bottom:0;
+    overscroll-behavior:contain;
+  }
+}
+@media (min-width:821px) and (max-width:1100px){
+  .pos-workspace{
+    grid-template-columns:minmax(310px,.9fr) minmax(0,1.1fr);
   }
 }
 
-@media (min-width:821px) and (max-height:620px){
-  .pos-layout.pos-reference,
-  .pos-reference .pos-sale,
-  .pos-reference .pos-catalog{
-    min-height:76vh;
-  }
-  .pos-reference .pos-catalog{
-    padding-bottom:28px;
-  }
-}
+/* Feedback de captura; Caja conserva el tamaño compacto del hotfix anterior. */
+.pos-reference .pos-product.is-added{animation:posAddedPulse .42s ease}
+.pos-reference .pos-product.is-added .pos-product-corner{background:var(--pos-green)}
+@keyframes posAddedPulse{0%{transform:scale(1)}45%{transform:scale(.965);box-shadow:0 0 0 3px color-mix(in srgb,var(--pos-green) 24%,transparent)}100%{transform:scale(1)}}
+.pos-quick-actions>#posCash{min-width:48px;padding-inline:9px}
+@media(max-width:820px){.pos-quick-actions>#posCash{min-width:44px}}
+
+.pos-print-options{padding:10px 12px}
+.pos-print-options summary{display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;font-size:12px}
+.pos-print-options summary span{font-size:11px;color:var(--pos-blue)}
+.pos-print-options[open] summary{margin-bottom:12px}

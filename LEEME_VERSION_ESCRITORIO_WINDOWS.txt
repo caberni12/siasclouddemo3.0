@@ -1,0 +1,17 @@
+SIASCLOUD ERP - VERSION ESCRITORIO WINDOWS
+
+1. Extraiga todo el ZIP en una carpeta local.
+2. Haga doble clic en SIASCLOUD_ESCRITORIO_WINDOWS.bat.
+3. En el primer inicio se crea automaticamente un acceso directo en el Escritorio.
+
+CARACTERISTICAS
+- Ventana tipo aplicacion, sin barra de direcciones.
+- No requiere Node ni Electron.
+- Usa Microsoft Edge/Chrome instalado en Windows.
+- Sirve SiasCloud desde 127.0.0.1 para evitar origen file:// / origin null.
+- Conserva sesion y configuracion en un perfil separado de SiasCloud.
+- Incluye --kiosk-printing para que window.print() use impresion directa a la impresora predeterminada.
+- No modifica la integracion con Facturacion.cl ni el backend Supabase.
+
+NOTA
+Para cambiar la impresora usada por impresion directa, cambie la impresora predeterminada de Windows antes de abrir SiasCloud ERP.

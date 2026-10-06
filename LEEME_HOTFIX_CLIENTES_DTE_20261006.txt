@@ -1,0 +1,13 @@
+HOTFIX CLIENTES / DTE - 2026-10-06
+
+Cambios:
+1. Dirección: compatibilidad address / direccion / Dirección.
+2. Teléfono: si la ficha histórica lo guarda en Contacto, el backend lo reconoce automáticamente cuando contiene dígitos.
+3. Transporte: nuevo campo transport en Clientes, visible en el formulario y persistido en Supabase.
+4. Facturacion.cl: NO se modifican endpoints, credenciales, emisión, folios ni estructura no documentada del proveedor.
+5. Para instalaciones existentes ejecutar una sola vez HOTFIX_CLIENTES_DIRECCION_CONTACTO_TRANSPORTE_20261006.sql.
+
+Importante:
+- La dirección sí se envía al DTE mediante DirRecep.
+- El teléfono se mantiene en la compatibilidad ya existente de Contacto/A2.
+- Transporte queda almacenado en la ficha del cliente para usarlo de forma segura. No se fuerza a Facturacion.cl como nodo arbitrario hasta validar el campo exacto soportado por su formato/API.

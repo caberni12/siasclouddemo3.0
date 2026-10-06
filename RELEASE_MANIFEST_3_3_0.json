@@ -13,28 +13,28 @@
   "cache_bust": "3.3.0-release",
   "critical_files": {
     "index.html": {
-      "sha256": "27202f2c566832906248f65608723b8df523edd5b9c9b7780d17e4da92199c90",
-      "bytes": 9244
+      "sha256": "fc3c1b96dbb8e2489126c168d09a0932073dd3745aafbbd1c956465ad28a3eb4",
+      "bytes": 9449
     },
     "config.js": {
       "sha256": "62267854fcb6112391a920248f15cdf6cc6e3442a885cc3007c47bd1d2d1c5e2",
       "bytes": 1129
     },
     "app.js": {
-      "sha256": "95f2bf70ef1d02648b07e1ed3f1815f8872c7fc176c08100d51f9bf5c32ea005",
-      "bytes": 147339
+      "sha256": "85dba311dd7f116a42b65b3bc999090bf3faef1a5f4366bba0e699ea38b2a993",
+      "bytes": 146558
     },
     "operations.js": {
-      "sha256": "7d0d51910ae856fec27979145c8f47f4ead52c9726711b528b09242baee9afc5",
-      "bytes": 98479
+      "sha256": "0674d6a70c9c15fb4286565acdde2edd63246ead62a74cfc3334e0e58f50731a",
+      "bytes": 100105
     },
     "pos.js": {
-      "sha256": "3706d9dc752cea8a3349ed566ddadb53c98e48d4bd27db50d66aa4335b0329f9",
-      "bytes": 29222
+      "sha256": "4ad63457a49c8e67053de07c628e82c85a6ccbfa01ae5f839c1f701813c2bb5b",
+      "bytes": 37121
     },
     "retail.js": {
-      "sha256": "72078dd1cf9977481d097ec895d78947d04babac8eddeed0751e68ff3eee4e92",
-      "bytes": 41889
+      "sha256": "de68f45b845f9bf4b538d14669781acbd864468d43530eca439dae806747358a",
+      "bytes": 42856
     },
     "importers.js": {
       "sha256": "b174551e27261bbec770ea06e3db91d976e437292c2b29753f512fcda0cd35dc",
@@ -49,24 +49,24 @@
       "bytes": 36603
     },
     "tienda.html": {
-      "sha256": "551d00819f44d465be1ac8841f9be2d42babd82f89c1f49f4dec6c32b462b778",
-      "bytes": 12509
+      "sha256": "206cbd022462aa68279ac34b9bb96ad84280b65f8ae6b0329bca5042ca72dbd2",
+      "bytes": 12527
     },
     "tienda.js": {
-      "sha256": "168b0e761d3a8b27eb4cb878fc48eee230534378ee128da523eb1f547b589470",
-      "bytes": 28477
+      "sha256": "2731fcb3cbf5e39877dc2d6fd600b99438a6f138def131d9c8b892d01fb98e94",
+      "bytes": 28681
     },
     "styles.css": {
       "sha256": "621cfb0cbb29909d7289841315487a63a96cf2861ac50312d862fa9a799d45f6",
       "bytes": 63009
     },
     "operations.css": {
-      "sha256": "b3f2beb07dc75b08cc0e913ae4d1acd97a2550647aa7badb33733be8aabf947e",
-      "bytes": 17797
+      "sha256": "fa899faba9d8e79d0d61691adfd5a63cc2d57f3c223e89759e6cda259ac956ee",
+      "bytes": 19859
     },
     "pos.css": {
-      "sha256": "77905873b3a5ccf874503f90975a7ff589d22700dfae0b5c110de40c57a18e87",
-      "bytes": 9604
+      "sha256": "cb83bc7624214cf21bc347fe07d32b67155eaa223c8abc4986ce1966df99e4f9",
+      "bytes": 15449
     },
     "retail.css": {
       "sha256": "1eb795716cf4a7765aded2495b79d9c5100c9b39b300a8d35d6257803abb0fc7",
@@ -77,8 +77,8 @@
       "bytes": 22665
     },
     "tienda.css": {
-      "sha256": "c0db36b4e9294b365e7651dde62923c499c8ba6cee82a903e302e0a6251b22f0",
-      "bytes": 36434
+      "sha256": "bcb98a3fb2bfccdb0dd59025e036b921f157252a5cd380ac01122d2abf93d8e8",
+      "bytes": 38427
     },
     "import-schema.json": {
       "sha256": "929dd96921c1a3e34a776a81920be859433897f29737bfbd1528fa2c444ae51d",
@@ -95,6 +95,60 @@
     "SQL_MAESTRO_SIASCLOUD_V3_3_0.sql": {
       "sha256": "df2aca9c1b43e483261debf120b756c25d5bb64512f72d81f80e285092d6439a",
       "bytes": 385419
+    },
+    "dte-pdf.js": {
+      "bytes": 11791,
+      "sha256": "61939822a4c362807f6b73e63f4680f48d1612ee7d01043393dfb5c747cd756a"
     }
+  },
+  "pos_layout_fix": {
+    "date": "2026-10-05",
+    "cache_bust": "3.3.0-pos-acceso-cobrar-20261005",
+    "catalog_to_footer_gap_px": 0,
+    "desktop_min_width_px": 821,
+    "validation": "Chromium; real POS modules; 50 mock products; 15 scenarios; quick checkout on desktop and mobile; shared busy state and F4 verified",
+    "catalog_starts_at_top": true,
+    "toolbar_and_notices_column": "inside left ticket",
+    "header_search": {
+      "minimum_viewport_width_px": 1101,
+      "minimum_free_header_width_px": 200,
+      "narrow_window_behavior": "search returns to POS toolbar"
+    },
+    "header_to_panels_gap_px": 0,
+    "ticket_and_catalog_titles_aligned": true,
+    "quick_checkout": {
+      "button_id": "posChargeQuick",
+      "desktop_location": "top of left ticket beside Caja y cierre",
+      "mobile_location": "POS top toolbar before catalog",
+      "synchronized_total": true,
+      "keyboard_shortcut": "F4",
+      "uses_existing_checkout": true,
+      "shared_preparation_lock": true,
+      "disabled_when": [
+        "cash session closed",
+        "pending checkout",
+        "missing POS_MANAGE permission"
+      ]
+    }
+  },
+  "printing_flow_fix": {
+    "date": "2026-10-06",
+    "cache_bust": "3.3.0-impresion-2-pasos-20261006",
+    "pos_actions": [
+      "Cobrar",
+      "Cobrar e imprimir"
+    ],
+    "automatic_browser_print_request": true,
+    "intermediate_erp_preview": false,
+    "popup_required": false,
+    "native_printer_confirmation": true,
+    "silent_physical_printing": false,
+    "scope": "tax, internal confirmed documents, cash closing and reprints",
+    "transaction_request_reused_on_recovery": true,
+    "backend_sql_unchanged": true,
+    "qa_print_scenarios": 35,
+    "qa_layout_scenarios": 15,
+    "qa_uses_mock_api_and_print": true,
+    "qa_a4_load_event_simulated": true
   }
 }

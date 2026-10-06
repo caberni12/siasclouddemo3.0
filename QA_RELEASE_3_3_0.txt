@@ -13,7 +13,7 @@ VALIDACIONES EJECUTADAS
 [OK] tsc no reporta errores de sintaxis ni identificadores duplicados; sólo dependencias Deno/npm no resolubles fuera del runtime Supabase.
 [OK] Todas las acciones literales usadas por app/operations/POS/retail/importadores/portal/tienda tienen ruta backend; imports.bulk.* usa dispatcher dinámico.
 [OK] Frontend, backend y manifiesto de importación alineados en versión 3.3.0.
-[OK] Cache-busting de index/portal/tienda alineado en 3.3.0-release.
+[OK] Cache-busting general 3.3.0-release; CSS/JS del POS actualizados a 3.3.0-pos-acceso-cobrar-20261005.
 [OK] SQL maestro contiene galería de productos, redes de tienda y solicitud de contacto, y finaliza estableciendo versión 3.3.0.
 [OK] Paquete raíz sin LEEME/SQL de hotfix 3.2.x que puedan inducir un despliegue parcial.
 
@@ -27,3 +27,76 @@ ORDEN DE DESPLIEGUE RECOMENDADO
 3. Archivos planos GitHub
 4. Ctrl+F5 / recarga completa
 5. Smoke test: login, POS, notificaciones, productos/galería, tienda, mayorista, DTE en certificación.
+
+CORRECCIÓN FRANJA BLANCA POS · 2026-10-05
+Validación visual y geométrica con Chromium y catálogo simulado de 50 productos.
+[OK] 1280x600: separación inferior antes 263 px; ahora 0 px.
+[OK] 1366x768-100: separación inferior antes 138.375 px; ahora 0 px.
+[OK] 1920x1080-100: separación inferior antes 10 px; ahora 0 px.
+[OK] 1366x768-equivalent-80: separación inferior antes 10 px; ahora 0 px.
+[OK] 1366x768-equivalent-125: separación inferior antes 198.469 px; ahora 0 px.
+[OK] 821x900-desktop-boundary: separación inferior antes 10 px; ahora 0 px.
+[OK] closed-cash: separación inferior antes 138.375 px; ahora 0 px.
+[OK] negative-stock: separación inferior antes 138.375 px; ahora 0 px.
+[OK] pending-checkout: separación inferior antes 138.375 px; ahora 0 px.
+[OK] no-products: separación inferior antes 435.375 px; ahora 0 px.
+[OK] mobile-390: geometría idéntica a la base.
+[OK] tablet-820: geometría idéntica a la base.
+[OK] Último producto accesible por scroll; categoría y stock visibles en las tarjetas.
+[OK] Sin hueco nuevo al agregar, buscar o vaciar el ticket.
+[OK] app.js, backend y SQL idénticos a los del ZIP de entrada. pos.js actualizado para ubicar el buscador en el encabezado.
+Sin llamadas a Supabase ni pruebas transaccionales de producción.
+
+BUSCADOR EN HEADER Y PANELES ALINEADOS SIN MARGEN SUPERIOR · 2026-10-05
+Prueba con módulos reales del POS y datos simulados de 50 productos; 14 escenarios.
+[OK] 1280x600: productos suben 92.000 px; separación inferior 0 px; buscador en header: True.
+[OK] 1366x768-100: productos suben 92.000 px; separación inferior 0 px; buscador en header: True.
+[OK] 1920x1080-100: productos suben 92.000 px; separación inferior 0 px; buscador en header: True.
+[OK] 1366x768-equivalent-80: productos suben 92.000 px; separación inferior 0 px; buscador en header: True.
+[OK] 1366x768-equivalent-125: productos suben 92.000 px; separación inferior 0 px; buscador en header: False.
+[OK] 821x900-desktop-boundary: productos suben 88.000 px; separación inferior 0 px; buscador en header: False.
+[OK] closed-cash: productos suben 92.000 px; separación inferior 0 px; buscador en header: True.
+[OK] negative-stock: productos suben 165.000 px; separación inferior 0 px; buscador en header: True.
+[OK] pending-checkout: productos suben 242.000 px; separación inferior 0 px; buscador en header: True.
+[OK] pending-and-negative: productos suben 315.000 px; separación inferior 0 px; buscador en header: True.
+[OK] company-switcher: productos suben 92.000 px; separación inferior 0 px; buscador en header: False.
+[OK] no-products: productos suben 92.000 px; separación inferior 0 px; buscador en header: True.
+[OK] mobile-390: geometría idéntica a la base móvil.
+[OK] tablet-820: geometría idéntica a la base móvil.
+[OK] Ticket y catálogo: mismo borde superior, títulos a la misma altura y borde inferior alineado.
+[OK] Paneles junto al encabezado principal: margen superior de 0 px más borde de 1 px.
+[OK] F2, búsqueda con refresco de servidor simulado, cambio de ancho y reapertura sin duplicados.
+[OK] Buscador retirado del encabezado al salir del POS.
+[OK] Categoría y stock visibles; último producto accesible mediante scroll.
+[OK] node --check pos.js; CSS verificado en Chromium; integridad del ZIP.
+Backend, SQL y app.js conservados. Sin cobros, DTE ni escrituras sobre Supabase.
+
+ACCESO RÁPIDO COBRAR ARRIBA · 2026-10-05
+Prueba con módulos reales del POS y 50 productos simulados; 15 escenarios.
+[OK] Cobrar visible junto a Caja y cierre, en la parte superior del ticket.
+[OK] En móvil el acceso queda antes del catálogo, en la barra superior del POS.
+[OK] Ambos botones muestran el mismo total al agregar, cambiar cantidad y quitar productos.
+[OK] Ambos botones y F4 abren el mismo formulario, con pago y efectivo recibido correctos.
+[OK] Ticket vacío y cliente sin seleccionar: validación existente y botones disponibles de nuevo.
+[OK] Mientras se prepara el cobro, ambos botones se bloquean; clics repetidos y F4 no duplican el formulario.
+[OK] Caja cerrada, cobro pendiente y usuario sin permiso POS_MANAGE: ambos botones inhabilitados.
+[OK] Validación funcional del acceso superior en 1366x768 y móvil de 390 px.
+[OK] Los 15 casos mantienen el catálogo alineado con el ticket y separación inferior de 0 px en escritorio.
+[OK] Sin desbordamiento horizontal en ventanas de 390, 820, 821, 1093, 1280, 1366, 1708 y 1920 px.
+[OK] Búsqueda en header, F2, cambio de ancho, reapertura y salida del POS sin duplicados.
+[OK] Sintaxis de pos.js, integridad del ZIP y hashes de archivos críticos verificados.
+Backend, SQL y app.js conservados respecto a la entrega anterior.
+Los formularios se probaron con datos simulados; no se confirmaron ventas ni se emitieron DTE.
+
+IMPRESIÓN SIN PANTALLAS INTERMEDIAS · 2026-10-06
+Validación sobre el ZIP HOTFIX_IMPRESION_DIRECTA_POS_ESTABLE_20261006 adjunto.
+[OK] 35 escenarios de impresión y operación con API simulada: un cobro, emisión iniciada antes de recargar catálogo, misma solicitud al recuperar, mismo folio al reimprimir, teléfono conservado y error de ticket sin volver a emitir.
+[OK] Móvil de 390 px: Cobrar abre un único formulario; Cobrar e imprimir solicita impresión; no abre otra pestaña ni un modal de vista previa. Las opciones de tipo/papel quedan plegadas con valores guardados.
+[OK] Tributarios 33, 34, 39, 41, 52, 56 y 61; internos QUOTE, ORDER, REQUEST, SALE, WHOLESALE, PURCHASE, RECEIPT, ISSUE, TRANSFER y DELIVERY.
+[OK] Guardado confirmado, confirmación de borrador, cierre con arqueo, acceso directo de arqueo y flujo SII usan la salida común. Los borradores no se imprimen automáticamente.
+[OK] Cambio de empresa durante cobro no imprime en la empresa nueva y conserva su carrito.
+[OK] UN con fracción/empaque agrega una unidad sin modal; cantidad por CAJA conserva conversiones; GR a KG acumula sin recargar catálogo.
+[OK] 15 escenarios del POS: buscador del header, acceso superior, F4, caja, pendientes, permisos, escritorio y móvil. Paneles alineados y separación inferior 0 px en escritorio; sin desbordamiento horizontal.
+[OK] Sintaxis de los 19 JavaScript; IDs de HTML sin duplicados; referencias locales existentes; hashes y ZIP íntegros.
+[OK] Backend, config.toml y todos los SQL idénticos al ZIP de entrada. Función Supabase contiene únicamente index.ts.
+Límites: API y llamadas window.print simuladas. El evento de carga del PDF A4 se simuló, ya que el Chromium de pruebas no incluye visor PDF; firma %PDF y tipo application/pdf verificados. No se ejecutaron cobros, emisiones reales, impresora física ni pruebas sobre el teléfono del usuario. Se conserva la confirmación de impresora del navegador/sistema.

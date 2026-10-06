@@ -1,0 +1,26 @@
+SIASCLOUD ERP 3.3.0 - HOTFIX IMPRESION SEGURA / RAPIDA
+Fecha: 2026-10-06
+
+OBJETIVO
+- Corregir el error de Chrome: Failed to set a named property onafterprint / cross-origin frame.
+- NO modificar la integracion ni el protocolo de Facturacion.cl.
+- NO reemitir un DTE para volver a imprimirlo.
+- Mantener el flujo de caja rapido.
+
+CAMBIOS
+1. Se elimina por completo la asignacion target.onafterprint sobre el visor PDF.
+2. Se evita manipular el contenido interno del visor PDF oficial.
+3. La impresion HTML propia (documentos internos y ticket termico generado desde el mismo DTE) sigue usando impresion directa.
+4. Para A4 oficial se intenta impresion directa; si Chrome aisla el visor PDF, se abre el MISMO PDF Blob en el visor nativo como fallback, sin nueva emision.
+5. Los reintentos de disponibilidad del PDF oficial se reducen a un maximo de 450 ms adicionales (150 + 300 ms), en vez de esperas acumuladas de varios segundos.
+6. La lectura de configuracion de formato se inicia en paralelo con la emision para reducir latencia.
+7. Se cambia la version del script en index.html para evitar cache del archivo defectuoso.
+
+GARANTIA FUNCIONAL
+- billing.facturacioncl.issue NO fue alterado.
+- XML, folios, RUT, credenciales y endpoints del proveedor NO fueron modificados.
+- Si un documento ya esta EMITIDO, la impresion reutiliza ese DTE/PDF y no crea otro folio.
+
+ARCHIVOS MODIFICADOS
+- dte-pdf.js
+- index.html

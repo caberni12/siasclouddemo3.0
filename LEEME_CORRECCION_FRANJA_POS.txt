@@ -1,0 +1,63 @@
+SIASCLOUD ERP 3.3.0 · CORRECCIÓN DE LA FRANJA BLANCA DEL POS
+Fecha: 2026-10-05
+
+CAUSA
+El catálogo tenía max-height: calc(100vh - 355px) y sus columnas se
+alineaban arriba. En ventanas bajas, el ticket seguía más abajo que el
+catálogo y aparecía un hueco blanco antes de la franja de caja.
+
+CORRECCIÓN
+- Ticket y catálogo se estiran hasta el mismo borde inferior.
+- El área de productos ocupa la altura restante hasta la franja de caja.
+- Se retira el límite fijo de altura del catálogo.
+- El tamaño del catálogo no depende de la cantidad de productos.
+- Las tarjetas conservan nombre, categoría y stock; tienen scroll interno.
+- El ticket y los controles siguen accesibles en ventanas bajas mediante
+  el desplazamiento de la página cuando hace falta.
+- Las reglas se aplican en escritorio desde 821 px.
+- index.html solicita una versión nueva de pos.css para renovar la caché.
+- El buscador pasa al encabezado principal si hay al menos 200 px libres
+  y la ventana mide más de 1100 px. Si falta espacio, vuelve al POS.
+- Caja y cierre y Cobrar quedan como botones compactos arriba del ticket.
+- Cobrar también está en la barra superior del POS en móvil.
+- El acceso rápido muestra el total actualizado y el atajo F4.
+- Ambos botones de cobro abren el mismo formulario y comparten el bloqueo
+  mientras se prepara el cobro, para evitar aperturas duplicadas.
+- Los avisos quedan dentro del ticket, debajo de su encabezado.
+- Ticket y catálogo empiezan a la misma altura, con títulos alineados.
+- Los dos paneles quedan junto al encabezado superior, sin margen encima.
+- El catálogo de la derecha empieza desde el borde superior del panel.
+- El atajo F2, la búsqueda y el escaneo conservan el mismo buscador.
+- Al salir del POS, el buscador se retira del encabezado.
+
+ACTUALIZAR ESTA CORRECCIÓN
+1. Extraer el ZIP.
+2. Reemplazar index.html, pos.css y pos.js en la raíz de GitHub.
+3. Esperar a que termine la publicación de GitHub Pages.
+4. Recargar con Ctrl+F5 y abrir el POS al 100 %.
+
+El ZIP contiene el sistema completo con los archivos planos en la raíz.
+Esta corrección visual no requiere ejecutar SQL ni desplegar la función
+de Supabase. El resto del código operativo se conserva como estaba en
+el ZIP entregado por el usuario.
+
+VALIDACIÓN
+Probado con Chromium, los módulos reales del POS y un catálogo simulado
+de 50 productos con los nombres y SKU del CSV de la entrega.
+Separación del borde del catálogo a la franja inferior: 0 px en las
+ventanas de escritorio probadas, incluso al capturar y filtrar productos.
+Se comprobó el acceso al último producto mediante scroll y que las
+tarjetas muestran categoría y stock sin recortarlos.
+Se comprobaron caja cerrada, cobro pendiente, venta sin stock habilitada,
+ambos avisos a la vez, selector de empresas, usuario sin permiso para cobrar
+y catálogo vacío: 15 casos. En móvil el acceso rápido aparece antes del
+catálogo y los controles siguen accesibles sin desbordamiento horizontal.
+Se comprobó F2, el traslado del buscador al cambiar de ancho, el refresco
+del catálogo tras buscar, la reapertura del POS sin buscadores duplicados
+y la limpieza del encabezado al salir del módulo.
+Se comprobó el cobro superior en escritorio y móvil: total al agregar,
+cambiar cantidad y quitar un producto; validaciones de ticket vacío y
+cliente sin seleccionar; apertura del mismo formulario desde ambos
+botones y F4; bloqueo compartido durante la preparación; inhabilitación
+con caja cerrada, cobro pendiente o sin permiso POS_MANAGE.
+No se realizaron cobros, emisiones DTE ni escrituras en Supabase.

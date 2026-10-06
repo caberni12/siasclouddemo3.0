@@ -9,3 +9,7 @@
 @media(max-width:1200px){.movement-filters{grid-template-columns:repeat(3,minmax(150px,1fr))}.movement-doc-filter{grid-column:span 1}}
 @media(max-width:820px){.movement-filters{grid-template-columns:repeat(2,minmax(0,1fr))}.cash-close-row{grid-template-columns:1fr 1fr}.cash-close-row>div:first-child{grid-column:1/-1}}
 @media(max-width:520px){.movement-filters{grid-template-columns:1fr}.cash-close-row{grid-template-columns:1fr}.cash-close-row>div:first-child{grid-column:auto}}
+
+/* Hotfix 2026-10-06: aplicación de saldos de notas de crédito en POS */
+.credit-use-control{display:flex;align-items:center;gap:8px;min-width:0}.credit-use-control input{min-width:0;flex:1}.credit-use-control .btn{white-space:nowrap}
+@media(max-width:820px){.credit-pay-row{grid-template-columns:1fr}.credit-use-control{width:100%}.credit-use-control input{width:100%}}

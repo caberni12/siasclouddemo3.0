@@ -24,3 +24,8 @@ IMPORTANTE
 - No ejecutar SQL de hotfix 3.2.x sobre esta entrega: ya están integrados.
 - Las plantillas XLSX y licencias se mantienen incluidas.
 - No se han eliminado datos ni funciones operacionales respecto de 3.2.16.
+
+AJUSTE IMPRESIÓN 2026-10-06
+Para actualizar desde SiasCloud_ERP_3_3_0_HOTFIX_IMPRESION_DIRECTA_POS_ESTABLE_20261006, reemplaza el frontend del paquete y recarga completamente el navegador. No es necesario ejecutar SQL ni desplegar otra vez la función Supabase para este ajuste.
+El POS abre el cobro con los valores guardados y Cobrar e imprimir solicita la impresión sin otro visor del ERP. El navegador conserva su diálogo de impresora.
+Detalles y límites de prueba: LEEME_HOTFIX_IMPRESION_DIRECTA_2026_10_06.txt.

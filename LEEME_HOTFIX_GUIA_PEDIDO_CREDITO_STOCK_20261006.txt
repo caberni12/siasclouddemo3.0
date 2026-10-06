@@ -1,0 +1,51 @@
+SIASCLOUD ERP 3.3.0 — HOTFIX GUIA / PEDIDO POS / CREDITO / STOCK
+Fecha: 2026-10-06
+
+CAMBIOS
+1) Guía de despacho
+- Se incorpora en la creación de la guía el Motivo de traslado (IndTraslado 1..9):
+  1 Operación constituye venta
+  2 Ventas por efectuar
+  3 Consignación
+  4 Entrega gratuita
+  5 Traslado interno
+  6 Otros traslados no venta
+  7 Guía de devolución
+  8 Traslado para exportación (no venta)
+  9 Venta para exportación
+- Se incorpora Tipo de despacho (1..3).
+- Se incorpora switch explícito "Descontar stock al confirmar esta guía".
+- El backend ya NO fuerza move_stock=true. Respeta la opción guardada.
+- Una guía convertida desde una venta/venta mayorista queda por defecto sin volver a mover stock, evitando doble descuento.
+- Al emitir DTE 52, el modal toma por defecto el IndTraslado y TipoDespacho guardados en la guía.
+
+2) Stock visible por bodega en documentos
+- El editor de documentos permite seleccionar bodega también en cotizaciones/pedidos/solicitudes para consulta.
+- Cada línea muestra stock disponible de la bodega seleccionada y la proyección "quedaría".
+- En documentos que no mueven inventario se indica expresamente que el stock no cambia.
+- Consulta por lotes/debounce para no ralentizar la carga ni disparar una petición por cada tecla.
+
+3) POS — Traer pedido a facturación
+- Nuevo botón "Traer pedido".
+- Permite buscar por número/folio del pedido.
+- Carga cliente, bodega, productos, cantidades y precios del pedido.
+- El ticket queda vinculado al pedido y bloquea cambios de detalle para conservar integridad.
+- El backend valida que no se facture dos veces el mismo pedido.
+- La venta creada conserva source_document_id apuntando al pedido.
+
+4) Nota de crédito / saldo a favor en POS
+- Si el cliente tiene créditos disponibles, pueden aplicarse al cobro.
+- Botón "Usar máximo" por nota de crédito.
+- Al aplicar crédito se recalcula automáticamente el efectivo/resto de pago para evitar pasos manuales.
+- La aplicación del crédito usa la función transaccional existente sias_v3_credit_apply:
+  descuenta el balance de sias_customer_credits y registra el pago CLIENT_CREDIT.
+- Si se consume el saldo completo, la nota queda con balance 0 y deja de aparecer como disponible.
+
+BASE DE DATOS
+- Este hotfix no agrega columnas ni tablas nuevas.
+- NO requiere ejecutar SQL adicional si ya está instalada la base 3.3.0 / hotfixes anteriores.
+
+DESPLIEGUE
+- Reemplazar archivos web en GitHub/hosting.
+- Desplegar supabase/functions/siascloud-erp/index.ts como la Edge Function siascloud-erp.
+- Mantener las variables/secretos actuales. No se modifica Facturacion.cl.

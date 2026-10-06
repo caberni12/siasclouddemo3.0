@@ -19,3 +19,18 @@ OBJETIVO DE ESTA RELEASE
 - Reducir errores por mezclar versiones o SQL parciales.
 
 - Hotfix POS 2026-10-05: se aumentó el aire vertical entre las tarjetas del catálogo y la franja inferior de sesión, solo en escritorio/tablet grande.
+
+2026-10-06 · Flujo de impresión sin pantallas intermedias
+- POS: Cobrar → Cobrar e imprimir, parámetros guardados y opciones plegadas.
+- Emisión e impresión antes de la recarga del catálogo; sin pestaña preparando documento.
+- Impresión automática solicitada para documentos tributarios e internos confirmados y arqueo final.
+- Reimpresión del mismo DTE, recuperación idempotente y control de cambio de empresa.
+- Aviso de stock pequeño; captura UN directa y cantidad/empaque opcional, sin recarga al agregar peso.
+- Backend y SQL preservados.
+
+2026-10-06 HOTFIX GUIA/PEDIDO/CREDITO/STOCK
+- Guía con IndTraslado 1..9, TipoDespacho y control explícito de movimiento de stock.
+- Corregido backend que forzaba move_stock=true en documentos.
+- Stock disponible/proyectado por bodega visible en el editor de documentos.
+- POS permite traer un pedido por número y convertirlo a venta con trazabilidad.
+- POS aplica saldo de notas de crédito con "Usar máximo" y rebalanceo automático del pago.

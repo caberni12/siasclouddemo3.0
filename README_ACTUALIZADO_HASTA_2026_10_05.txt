@@ -40,6 +40,25 @@ DESPLIEGUE COMPLETO
 No es necesario volver a subir las imágenes al repositorio GitHub: ya están alojadas en Supabase Storage.
 
 HOTFIX VISUAL POS
-- Más espacio vertical antes de la franja azul inferior del POS.
-- No cambia lógica de ventas, stock, precios ni botones.
+- El catálogo ocupa toda la altura hasta la franja inferior, sin hueco blanco.
+- Las columnas del ticket y del catálogo comparten la misma altura.
+- Los productos mantienen su información y se desplazan dentro del catálogo.
+- Ventas, stock y precios conservan su proceso actual.
 - Móvil conserva comportamiento compacto.
+- Buscador de productos en el encabezado principal cuando hay espacio.
+- Botón Caja y cierre y avisos compactos dentro del ticket de la izquierda.
+- Acceso rápido Cobrar arriba, junto a Caja y cierre, con total y atajo F4.
+- El botón superior y el inferior abren el mismo formulario de cobro.
+- Ambos se bloquean durante la preparación del cobro y respetan la caja,
+  los permisos y las solicitudes pendientes de verificar.
+- En móvil el acceso rápido aparece en la barra superior del POS.
+- Ticket y catálogo comienzan a la misma altura, con títulos alineados.
+- Ambos paneles quedan pegados al encabezado superior, sin margen encima.
+- En ventanas estrechas, el buscador vuelve a la barra del POS.
+- Para esta corrección reemplazar index.html, pos.css y pos.js en GitHub.
+- El CSS y JavaScript del POS llevan nuevas referencias de caché. Recargar con Ctrl+F5.
+
+AJUSTE IMPRESIÓN 2026-10-06
+Para actualizar desde SiasCloud_ERP_3_3_0_HOTFIX_IMPRESION_DIRECTA_POS_ESTABLE_20261006, reemplaza el frontend del paquete y recarga completamente el navegador. No es necesario ejecutar SQL ni desplegar otra vez la función Supabase para este ajuste.
+El POS abre el cobro con los valores guardados y Cobrar e imprimir solicita la impresión sin otro visor del ERP. El navegador conserva su diálogo de impresora.
+Detalles y límites de prueba: LEEME_HOTFIX_IMPRESION_DIRECTA_2026_10_06.txt.
