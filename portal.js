@@ -748,9 +748,13 @@
       const raw = atob(String(r.pdf_base64||"").replace(/\s/g,""));
       const bytes = new Uint8Array(raw.length);
       for(let i=0;i<raw.length;i++) bytes[i]=raw.charCodeAt(i);
-      const url = URL.createObjectURL(new Blob([bytes],{type:"application/pdf"}));
-      window.open(url,"_blank","noopener");
-      setTimeout(()=>URL.revokeObjectURL(url),60000);
+      if(window.SiasDesktop?.isDesktop){
+        await window.SiasDesktop.openPdf(bytes,`DTE_${id}.pdf`);
+      }else{
+        const url = URL.createObjectURL(new Blob([bytes],{type:"application/pdf"}));
+        window.open(url,"_blank","noopener");
+        setTimeout(()=>URL.revokeObjectURL(url),60000);
+      }
     }catch(e){
       toast(e.message);
     }

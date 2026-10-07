@@ -20,9 +20,15 @@
   host.innerHTML='<div data-print-info hidden><div class="sias-print-heading"><strong></strong><button type="button" class="icon-btn" data-pdf-close aria-label="Cerrar aviso de impresión">×</button></div><p data-pdf-status role="status"></p><div class="sias-print-actions"><button type="button" class="btn secondary small" data-pdf-print hidden>Reimprimir</button><button type="button" class="btn secondary small" data-pdf-retry hidden>Consultar documento</button><button type="button" class="btn secondary small" data-pdf-refresh hidden>Actualizar PDF</button><a class="btn secondary small" data-pdf-download hidden download="Documento.pdf">PDF</a></div></div><iframe data-sias-print-frame tabindex="-1" aria-hidden="true"></iframe>';
   host.querySelector('strong').textContent=options.title||'Documento';
   const frame=host.querySelector('iframe');frame.title=options.title||'Documento para imprimir';
-  const v={id:++jobSequence,popup:null,host,frame,company:A.state.me?.companyId,token:A.state.token,autoPrint:options.autoPrint!==false,printRequested:false,ready:false,discarded:false};
+  const v={id:++jobSequence,popup:null,host,frame,company:A.state.me?.companyId,token:A.state.token,autoPrint:options.autoPrint!==false,printRequested:false,ready:false,discarded:false,nativePdf:false,pdfBytes:null,pdfName:'Documento.pdf'};
   host.querySelector('[data-pdf-close]').onclick=()=>host.querySelector('[data-print-info]').hidden=true;
-  host.querySelector('[data-pdf-print]').onclick=()=>requestPrint(v,frame.contentWindow,true);
+  host.querySelector('[data-pdf-print]').onclick=()=>{
+   if(v.nativePdf&&v.pdfBytes&&window.SiasDesktop?.isDesktop){
+    window.SiasDesktop.openPdf(v.pdfBytes,v.pdfName).catch(error=>message(v,'No se pudo abrir el visor de Windows: '+(error?.message||error),true));
+    return;
+   }
+   requestPrint(v,frame.contentWindow,true);
+  };
   document.body.appendChild(host);
   v.cleanupTimer=setTimeout(()=>discard(v),900000);
   return v;
@@ -69,10 +75,21 @@
  function showHtml(html,v,caption='Documento listo'){
   assertContext(v);if(v.discarded)return false;
   const frame=v.frame;v.ready=false;
-  frame.onload=()=>{if(v.discarded||frame.contentDocument?.querySelector('meta[name="sias-print-job"]')?.content!==String(v.id))return;v.ready=true;requestPrint(v,frame.contentWindow);};
-  frame.removeAttribute('src');frame.srcdoc=html.replace(/<head>/i,`<head><meta name="sias-print-job" content="${v.id}">`);
-  v.host.querySelector('[data-pdf-download]').hidden=true;v.host.querySelector('[data-pdf-refresh]').hidden=true;v.host.querySelector('[data-pdf-retry]').hidden=true;message(v,caption);
-  return true;
+  const loadInternal=()=>{
+   frame.onload=()=>{if(v.discarded||frame.contentDocument?.querySelector('meta[name="sias-print-job"]')?.content!==String(v.id))return;v.ready=true;requestPrint(v,frame.contentWindow);};
+   frame.removeAttribute('src');frame.srcdoc=html.replace(/<head>/i,`<head><meta name="sias-print-job" content="${v.id}">`);
+  };
+  v.host.querySelector('[data-pdf-download]').hidden=true;v.host.querySelector('[data-pdf-refresh]').hidden=true;v.host.querySelector('[data-pdf-retry]').hidden=true;
+  if(window.SiasDesktop?.isDesktop){
+   v.ready=true;message(v,caption+' · abriendo en Windows…',true);
+   const fileName=(caption||'Documento').replace(/[\/:*?"<>|]+/g,'_')+'.html';
+   window.SiasDesktop.openHtml(html,fileName).then(()=>message(v,caption+' · documento abierto',true)).catch(error=>{
+    console.warn('[SiasCloud Desktop] No se pudo abrir HTML nativo, usando vista interna:',error);
+    message(v,caption+' · usando vista interna',true);loadInternal();
+   });
+   return true;
+  }
+  loadInternal();message(v,caption);return true;
  }
  async function preferred(dte={}){try{const r=await A.erpCall('printing.config.get'),f=r.formats||{},type=String(dte.document_type||'');return f.tributary?.[type]||(A.state.route==='pos'?(f.defaults?.pos||'80MM'):(f.defaults?.tributary||'A4'));}catch{try{const r=await A.erpCall('billing.config.get'),c=r.config||{};return A.state.route==='pos'?(c.pos_dte_print_format||'80MM'):(c.dte_print_format||'A4');}catch{return 'A4';}}}
  function pdfCaption(dte){return `DTE A4 oficial · folio ${dte.folio||'confirmado'} · Teléfono de emisión: ${dte.recipient_phone||'Sin registro'}`;}
@@ -88,9 +105,16 @@
    try{assertContext(v);message(v,`DTE emitido · folio ${dte.folio||'confirmado'}. Preparando A4 oficial…`);const r=await A.erpCall('billing.pdf',{id:dte.id,...(refresh?{refresh:true}:{})});assertContext(v);Object.assign(dte,r.document||{});
     const base64=String(r.pdf_base64||'').replace(/^data:application\/pdf;base64,/i,'').replace(/\s/g,'');if(base64.length>41943040)throw new Error('El PDF supera el tamaño admitido.');const raw=atob(base64);if(!raw.startsWith('%PDF-'))throw new Error('El proveedor devolvió un PDF inválido.');
     const bytes=Uint8Array.from(raw,c=>c.charCodeAt(0)),url=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));activeUrls.add(url);
-    const frame=v.frame,link=v.host.querySelector('[data-pdf-download]');v.ready=false;
-    frame.onload=()=>{if(v.discarded)return;v.ready=true;requestPrint(v,frame.contentWindow);};
-    frame.removeAttribute('srcdoc');frame.src=url;link.href=url;link.download='DTE_'+(dte.folio||'emitido')+'.pdf';link.hidden=false;v.host.querySelector('[data-pdf-retry]').hidden=true;message(v,pdfCaption(dte),true);
+    const frame=v.frame,link=v.host.querySelector('[data-pdf-download]'),fileName='DTE_'+(dte.folio||'emitido')+'.pdf';v.ready=false;
+    v.pdfBytes=bytes;v.pdfName=fileName;v.nativePdf=false;
+    let nativeOpened=false;
+    if(window.SiasDesktop?.isDesktop){
+     try{nativeOpened=await window.SiasDesktop.openPdf(bytes,fileName);v.nativePdf=!!nativeOpened;}
+     catch(error){console.warn('[SiasCloud Desktop] Visor nativo no disponible, usando visor interno:',error);}
+    }
+    frame.onload=()=>{if(v.discarded)return;v.ready=true;if(!nativeOpened)requestPrint(v,frame.contentWindow);};
+    frame.removeAttribute('srcdoc');frame.src=url;link.href=url;link.download=fileName;link.hidden=false;v.host.querySelector('[data-pdf-retry]').hidden=true;message(v,nativeOpened?pdfCaption(dte)+' · abierto en el visor de Windows':pdfCaption(dte),true);
+    const printBtn=v.host.querySelector('[data-pdf-print]');if(nativeOpened){printBtn.hidden=false;printBtn.textContent='Abrir PDF';}
     const reload=v.host.querySelector('[data-pdf-refresh]');reload.hidden=false;reload.onclick=()=>refreshA4(dte,v,reload);
     if(v.pdfUrl)release(v.pdfUrl);v.pdfUrl=url;setTimeout(()=>release(url),900000);return true;
    }catch(error){if(attempt<2&&/PDF_NO_DISPONIBLE|PDF.*(?:pendiente|no.*disponible)/i.test(error.message)){message(v,'DTE emitido. Sincronizando PDF oficial…');await new Promise(r=>setTimeout(r,150*(attempt+1)));continue;}throw error;}
