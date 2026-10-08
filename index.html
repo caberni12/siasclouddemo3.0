@@ -14,7 +14,7 @@
   <link rel="apple-touch-icon" href="siascloud-icon-192.png?v=3.3.0-desktop2">
   
   <meta name="msapplication-TileImage" content="siascloud-icon-192.png">
-  <link rel="stylesheet" href="styles.css?v=3.3.0-release">
+  <link rel="stylesheet" href="styles.css?v=3.3.0-opt-trace-20261007">
   <link rel="stylesheet" href="operations.css?v=3.3.0-dteflow2-impresion-2-pasos-20261006">
   <link rel="stylesheet" href="retail.css?v=3.3.0-pedido-credito-20261006-release">
   <link rel="stylesheet" href="pos.css?v=3.3.0-impresion-2-pasos-20261006">
@@ -43,7 +43,7 @@
     <form id="serverForm" class="hidden form-stack">
       <h2>Conectar servidor</h2>
       <p>Indica la URL de conexión de tu servidor SiasCloud.</p>
-      <label>URL Functions<input name="functions_url" required placeholder="https://TU-PROYECTO.supabase.co/functions/v1"></label>
+      <label>URL Functions<input name="functions_url" required placeholder="URL de Servicios Cloud SiasCloud"></label>
       <button class="btn primary" type="submit">Guardar y comprobar</button>
       <small>La URL queda guardada solo en este navegador. No ingreses claves privadas en este campo.</small>
     </form>
@@ -123,22 +123,24 @@
     <div id="modalActions" class="modal-actions"><button class="btn secondary" type="button" id="modalCancel">Cancelar</button><button class="btn primary" type="submit">Guardar</button></div>
   </form>
 </dialog>
-<script src="desktop-bridge.js?v=3.3.0-desktop-native"></script>
+<script src="sias-performance.js?v=3.3.0-velocidad-20261007"></script>
+<script src="sias-document-viewer.js?v=3.3.0-visor-integrado-20261007"></script>
+<script src="desktop-bridge.js?v=3.3.0-desktop-lite-20261007"></script>
 <script src="splash.js?v=3.3.0-release"></script>
 <script src="config.js?v=3.3.0-release"></script>
-<script src="operations.js?v=3.3.0-guia-stock-pedido-credito-20261006"></script>
+<script src="operations.js?v=3.3.0-opt-trace-20261007"></script>
 <script src="retail-core.js?v=3.3.0-release"></script>
 <script src="pos-customers.js?v=3.3.0-release"></script>
 <script src="pos.js?v=3.3.0-pedido-credito-20261006"></script>
-<script src="retail.js?v=3.3.0-impresion-2-pasos-20261006"></script>
+<script src="retail.js?v=3.3.0-opt-trace-20261007"></script>
 <script src="xml-sax.js?v=3.3.0-release"></script>
 <script src="xlsx-xml-worker.js?v=3.3.0-release"></script>
 <script src="xlsx-zip-worker.js?v=3.3.0-release"></script>
 <script src="xlsx-reader.js?v=3.3.0-release"></script>
 <script src="import-core.js?v=3.3.0-release"></script>
 <script src="bulk-import.js?v=3.3.0-release"></script>
-<script src="dte-pdf.js?v=3.3.0-desktop-native-20261006"></script>
+<script src="dte-pdf.js?v=3.3.0-desktop-lite-20261007"></script>
 <script src="importers.js?v=3.3.0-release"></script>
-<script src="app.js?v=3.3.0-impresion-2-pasos-20261006"></script>
+<script src="app.js?v=3.3.0-opt-trace-20261007"></script>
 </body>
 </html>

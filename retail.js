@@ -92,7 +92,37 @@
   function collectMaster(fd){const values={attributes:{},fractional:fd.get('fractional')==='on'};for(const key of ['parent_product_id','supplier_id','brand'])values[key]=String(fd.get(key)||'')||null;for(const key of ['pack_quantity','pallet_boxes','weight_kg','length_cm','width_cm','height_cm'])values[key]=fd.get(key)===''?null:Number(fd.get(key));$$('.retail-attribute').forEach(row=>{const key=$('.attribute-key',row).value.trim(),value=$('.attribute-value',row).value.trim();if(key){if(Object.hasOwn(values.attributes,key))throw new Error('Hay atributos con nombre repetido');Object.defineProperty(values.attributes,key,{value,enumerable:true});}});return values;}
   async function productHistory(id){const r=await api('products.history',{product_id:id});const fieldNames={name:'Nombre',sku:'SKU',barcode:'Código de barras',unit:'Unidad',price:'Precio',cost:'Costo',wholesale_price:'Precio mayorista',category:'Categoría',pack_quantity:'Cantidad por caja',pallet_boxes:'Cajas por pallet',parent_product_id:'Producto padre',active:'Activo',fractional:'Fracciones',brand:'Marca',weight_kg:'Peso'};const rows=r.rows.map(x=>[A.fmtDate(x.created_at),x.before_value?'Edición':'Creación',Object.entries(fieldNames).filter(([key])=>JSON.stringify(x.before_value?.[key])!==JSON.stringify(x.after_value?.[key])).map(([key,name])=>`${name}: ${x.after_value[key]??'—'}`).join(' · ')]);readModal('Historial del Maestro',table(['Fecha','Cambio','Detalle'],rows));}
   async function operational(id){const [r,s]=await Promise.all([api('documents.get',{id}),api('staff.list')]),d=r.document;A.openModal(`Responsables · ${d.number}`,`<div class="retail-form">${[['seller_id','SELLER'],['preparer_id','PREPARER'],['packer_id','PACKER']].map(([field,role])=>`<label>${roles[role]}<select name="${field}">${options(s.rows.filter(x=>x.active&&x.roles.includes(role)),d.metadata?.[field],'Sin asignar')}</select></label>`).join('')}<label>Notas de operación<textarea name="notes" rows="3">${E(d.notes||'')}</textarea></label>${d.status!=='DRAFT'?'<label>Motivo de la corrección<textarea name="reason" minlength="8" required></textarea></label>':''}</div>`,async fd=>{await api('documents.operational',{id,patch:Object.fromEntries([...fd].filter(([k])=>k!=='reason')),reason:fd.get('reason')||''});return {toast:'Datos operativos actualizados'};});}
-  async function flow(id){const r=await api('documents.flow',{id});readModal('Flujo del documento',`<div class="retail-flow">${r.rows.map(d=>`<div class="retail-flow-step"><div><strong>${E(labels[d.document_type]||d.document_type)} · ${E(d.number)}</strong><small>${E(d.metadata?.flow_state==='CLOSED'?'Flujo cerrado':status[d.status]||d.status)} · ${money(d.total)}</small></div><button type="button" class="btn secondary small" data-flow-document="${E(d.id)}">Ver</button></div>`).join('')}</div>`);$$('[data-flow-document]').forEach(b=>b.addEventListener('click',guarded(()=>window.SiasOperations.preview(b.dataset.flowDocument))));}
+  async function flow(id){
+    // Consulta el grafo comercial de origen -> derivados, sin modificar ningún folio.
+    const r=await api('documents.flow',{id}),rows=Array.isArray(r.rows)?r.rows:[];
+    if(!rows.length)throw new Error('No se encontraron documentos relacionados');
+    const html=`<div class="sias-trace-intro">${rows.length} documento${rows.length===1?'':'s'} relacionado${rows.length===1?'':'s'} · Selecciona <strong>Detalles</strong> para revisar pagos y DTE sin volver a emitir.</div><div class="retail-flow sias-trace-flow">${rows.map((d,i)=>`
+      <div class="retail-flow-step sias-trace-step" data-trace-step="${E(d.id)}">
+        <div class="sias-trace-copy"><strong>${i+1}. ${E(labels[d.document_type]||d.document_type)} · ${E(d.number)}</strong><small>${E(d.metadata?.flow_state==='CLOSED'?'Flujo cerrado':status[d.status]||d.status)} · ${money(d.total)}${d.source_document_id?' · Derivado de otro documento':' · Documento de origen'}</small><div class="sias-trace-detail" data-trace-detail="${E(d.id)}" hidden></div></div>
+        <div class="sias-trace-actions"><button type="button" class="btn secondary small" data-flow-expand="${E(d.id)}">Detalles</button><button type="button" class="btn secondary small" data-flow-document="${E(d.id)}">Ver</button></div>
+      </div>`).join('')}</div>`;
+    readModal('Trazabilidad documental',html);
+    $$('[data-flow-document]').forEach(b=>b.addEventListener('click',guarded(()=>window.SiasOperations.preview(b.dataset.flowDocument))));
+    $$('[data-flow-expand]').forEach(button=>button.addEventListener('click',guarded(async()=>{
+      const target=$(`[data-trace-detail="${CSS.escape(button.dataset.flowExpand)}"]`);
+      if(!target)return;
+      if(target.dataset.loaded==='1'){target.hidden=!target.hidden;return;}
+      const result=await api('documents.get',{id:button.dataset.flowExpand});
+      if(!target.isConnected)return;
+      const documentRow=result.document||{},payments=result.payments||[],dtes=result.dte||[];
+      const folioKey=x=>`${x.environment||''}:${x.document_type||''}:${x.folio||''}`;
+      const issues=dtes.filter((x,i)=>x.folio&&dtes.findIndex(y=>folioKey(y)===folioKey(x))!==i);
+      const active=dtes.filter(x=>x.status==='EMITIDO');
+      target.innerHTML=`<div class="sias-trace-meta"><span><b>Fecha:</b> ${E(documentRow.issue_date||'Sin fecha')}</span><span><b>Origen:</b> ${E(documentRow.source||'DIRECTO')}</span><span><b>Usuario:</b> ${E(documentRow.created_by_user?.full_name||documentRow.created_by_user?.email||'No informado')}</span><span><b>Pagos:</b> ${payments.length}</span></div>
+       <div class="sias-trace-subtitle">Documentos tributarios vinculados (${dtes.length})</div>
+       ${dtes.length?dtes.map(x=>`<div class="sias-trace-dte"><span>DTE ${E(x.document_type)} · Folio ${E(x.folio||'pendiente')} · ${E(x.environment||'')} · <strong>${E(x.status)}</strong></span>${x.status==='EMITIDO'?`<button class="btn secondary small" type="button" data-trace-pdf="${E(x.id)}">Ver PDF</button>`:''}</div>`).join(''):'<small>No hay DTE asociados a este documento.</small>'}
+       ${payments.length?`<div class="sias-trace-subtitle">Pagos</div>${payments.map(x=>`<div class="sias-trace-dte"><span>${E(methods[x.method]||x.method||'Pago')} · ${E(x.status||'')} · ${E(x.paid_at||'')}</span><strong>${money(x.amount)}</strong></div>`).join('')}`:''}
+       ${issues.length?'<div class="sias-trace-alert">Revisar: se repite un tipo y folio de DTE en este documento.</div>':''}
+       ${active.length>1?'<small>Un documento puede tener varios DTE válidos (por ejemplo, factura y nota de crédito); revisa cada referencia.</small>':''}`;
+      target.dataset.loaded='1';target.hidden=false;
+      $$('[data-trace-pdf]',target).forEach(b=>b.addEventListener('click',guarded(()=>window.SiasDtePdf.open(b.dataset.tracePdf))));
+    })));
+  }
   async function closeFlow(id){await api('documents.close',{id});A.closeModal(true);await A.render();A.toast('Flujo documental cerrado');}
   async function print(id,format='AUTO'){
     const normalized=String(format||'AUTO').toUpperCase()==='80'?'80MM':String(format||'AUTO').toUpperCase()==='58'?'58MM':String(format||'AUTO').toUpperCase();

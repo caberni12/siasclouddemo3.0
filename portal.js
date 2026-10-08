@@ -749,12 +749,17 @@
       const bytes = new Uint8Array(raw.length);
       for(let i=0;i<raw.length;i++) bytes[i]=raw.charCodeAt(i);
       if(window.SiasDesktop?.isDesktop){
-        await window.SiasDesktop.openPdf(bytes,`DTE_${id}.pdf`);
-      }else{
-        const url = URL.createObjectURL(new Blob([bytes],{type:"application/pdf"}));
-        window.open(url,"_blank","noopener");
-        setTimeout(()=>URL.revokeObjectURL(url),60000);
+        const opened=await window.SiasDesktop.openPdf(bytes,`DTE_${id}.pdf`,{title:'Documento tributario · SiasCloud'});
+        if(opened) return;
       }
+      const url = URL.createObjectURL(new Blob([bytes],{type:"application/pdf"}));
+      if(window.SiasDocumentViewer){
+        window.SiasDocumentViewer.open({url,kind:'pdf',title:'Documento tributario · SiasCloud',downloadName:`DTE_${id}.pdf`});
+      }else{
+        URL.revokeObjectURL(url);
+        throw new Error('El visor integrado de documentos no está disponible. Actualiza SiasCloud.');
+      }
+      setTimeout(()=>URL.revokeObjectURL(url),900000);
     }catch(e){
       toast(e.message);
     }

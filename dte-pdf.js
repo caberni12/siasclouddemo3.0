@@ -1,7 +1,7 @@
 /* Impresión DTE. A4 usa el PDF oficial; térmico usa /wsds/getticket del mismo DTE de Facturacion.cl. */
 (()=>{
  'use strict';
- let A;let jobSequence=0;const activeUrls=new Set();
+ let A;let jobSequence=0;const activeUrls=new Set(),pendingEmissions=new Map();
  function progressStart(label='Emitiendo documento tributario…'){
   let host=document.querySelector('[data-dte-progress-overlay]');
   if(!host){host=document.createElement('div');host.setAttribute('data-dte-progress-overlay','');host.className='dte-progress-overlay';host.innerHTML='<div class="dte-progress-card" role="status" aria-live="polite"><div class="dte-progress-title">Procesando documento</div><div class="dte-progress-text"></div><div class="dte-progress-track"><i></i></div><small>No cierres esta ventana. SiasCloud está esperando la confirmación de Facturacion.cl.</small></div>';document.body.appendChild(host);}
@@ -23,9 +23,11 @@
   const v={id:++jobSequence,popup:null,host,frame,company:A.state.me?.companyId,token:A.state.token,autoPrint:options.autoPrint!==false,printRequested:false,ready:false,discarded:false,nativePdf:false,pdfBytes:null,pdfName:'Documento.pdf'};
   host.querySelector('[data-pdf-close]').onclick=()=>host.querySelector('[data-print-info]').hidden=true;
   host.querySelector('[data-pdf-print]').onclick=()=>{
-   if(v.nativePdf&&v.pdfBytes&&window.SiasDesktop?.isDesktop){
-    window.SiasDesktop.openPdf(v.pdfBytes,v.pdfName).catch(error=>message(v,'No se pudo abrir el visor de Windows: '+(error?.message||error),true));
-    return;
+   if(v.viewerEntry&&window.SiasDocumentViewer){
+    window.SiasDocumentViewer.open(v.viewerEntry);return;
+   }
+   if(v.pdfUrl&&window.SiasDocumentViewer){
+    window.SiasDocumentViewer.open({url:v.pdfUrl,kind:'pdf',title:v.pdfName,downloadName:v.pdfName});return;
    }
    requestPrint(v,frame.contentWindow,true);
   };
@@ -38,15 +40,12 @@
  function assertContext(v){if(v.company!==A.state.me?.companyId||v.token!==A.state.token)throw new Error('La sesión o la empresa activa cambió. Abre el documento nuevamente.');}
  function discard(v){if(!v||v.discarded)return;v.discarded=true;clearTimeout(v.cleanupTimer);clearTimeout(v.noticeTimer);if(v.pdfUrl)release(v.pdfUrl);v.host.remove();}
  function openPdfNative(v){
-  if(!v.pdfUrl)return false;
-  // El PDF oficial se abre como recurso local (Blob) sin intentar tocar el visor de Facturacion.cl.
-  // Esto evita violar Same-Origin Policy. No modifica ni re-emite el DTE.
-  try{
-   const popup=window.open(v.pdfUrl,'_blank','noopener');
-   if(popup)return true;
-  }catch(_){/* fallback visible debajo */}
+  if(!v.pdfUrl) return false;
+  if(window.SiasDocumentViewer){
+   return window.SiasDocumentViewer.open({url:v.pdfUrl,kind:'pdf',title:v.pdfName,downloadName:v.pdfName});
+  }
   const link=v.host.querySelector('[data-pdf-download]');
-  if(link){link.hidden=false;link.removeAttribute('download');link.target='_blank';link.rel='noopener';link.textContent='Abrir PDF';}
+  if(link){link.hidden=false;link.textContent='Guardar PDF';}
   return false;
  }
  function requestPrint(v,target,manual=false){
@@ -75,21 +74,33 @@
  function showHtml(html,v,caption='Documento listo'){
   assertContext(v);if(v.discarded)return false;
   const frame=v.frame;v.ready=false;
+  // El visor aporta la única barra de acciones; se oculta la del HTML embebido.
+  const previewHtml=html.replace(/<\/head>/i,'<style id="sias-preview-toolbar">body>.toolbar{display:none!important}</style></head>');
   const loadInternal=()=>{
    frame.onload=()=>{if(v.discarded||frame.contentDocument?.querySelector('meta[name="sias-print-job"]')?.content!==String(v.id))return;v.ready=true;requestPrint(v,frame.contentWindow);};
    frame.removeAttribute('src');frame.srcdoc=html.replace(/<head>/i,`<head><meta name="sias-print-job" content="${v.id}">`);
   };
-  v.host.querySelector('[data-pdf-download]').hidden=true;v.host.querySelector('[data-pdf-refresh]').hidden=true;v.host.querySelector('[data-pdf-retry]').hidden=true;
+  const loadViewer=()=>{
+   if(!window.SiasDocumentViewer){loadInternal();return;}
+   v.viewerEntry={html:previewHtml,kind:'html',title:caption};
+   window.SiasDocumentViewer.open(v.viewerEntry);
+   v.ready=true;message(v,caption+' · vista previa dentro de SiasCloud');
+  };
+  v.host.querySelector('[data-pdf-download]').hidden=true;
+  v.host.querySelector('[data-pdf-refresh]').hidden=true;
+  v.host.querySelector('[data-pdf-retry]').hidden=true;
   if(window.SiasDesktop?.isDesktop){
-   v.ready=true;message(v,caption+' · abriendo en Windows…',true);
    const fileName=(caption||'Documento').replace(/[\/:*?"<>|]+/g,'_')+'.html';
-   window.SiasDesktop.openHtml(html,fileName).then(()=>message(v,caption+' · documento abierto',true)).catch(error=>{
-    console.warn('[SiasCloud Desktop] No se pudo abrir HTML nativo, usando vista interna:',error);
-    message(v,caption+' · usando vista interna',true);loadInternal();
+   window.SiasDesktop.openHtml(previewHtml,fileName,{title:caption}).then(opened=>{
+    if(opened){v.ready=true;v.viewerEntry=window.SiasDocumentViewer?.current||null;message(v,caption+' · vista previa dentro de SiasCloud');}
+    else loadViewer();
+   }).catch(error=>{
+    console.warn('[SiasCloud Desktop] Usando visor HTML integrado:',error);
+    loadViewer();
    });
    return true;
   }
-  loadInternal();message(v,caption);return true;
+  loadViewer();return true;
  }
  async function preferred(dte={}){try{const r=await A.erpCall('printing.config.get'),f=r.formats||{},type=String(dte.document_type||'');return f.tributary?.[type]||(A.state.route==='pos'?(f.defaults?.pos||'80MM'):(f.defaults?.tributary||'A4'));}catch{try{const r=await A.erpCall('billing.config.get'),c=r.config||{};return A.state.route==='pos'?(c.pos_dte_print_format||'80MM'):(c.dte_print_format||'A4');}catch{return 'A4';}}}
  function pdfCaption(dte){return `DTE A4 oficial · folio ${dte.folio||'confirmado'} · Teléfono de emisión: ${dte.recipient_phone||'Sin registro'}`;}
@@ -109,12 +120,22 @@
     v.pdfBytes=bytes;v.pdfName=fileName;v.nativePdf=false;
     let nativeOpened=false;
     if(window.SiasDesktop?.isDesktop){
-     try{nativeOpened=await window.SiasDesktop.openPdf(bytes,fileName);v.nativePdf=!!nativeOpened;}
-     catch(error){console.warn('[SiasCloud Desktop] Visor nativo no disponible, usando visor interno:',error);}
+     try{nativeOpened=await window.SiasDesktop.openPdf(bytes,fileName,{title:pdfCaption(dte)});v.nativePdf=!!nativeOpened;}
+     catch(error){console.warn('[SiasCloud Desktop] No se pudo usar archivo local, abriendo PDF dentro del ERP:',error);}
     }
-    frame.onload=()=>{if(v.discarded)return;v.ready=true;if(!nativeOpened)requestPrint(v,frame.contentWindow);};
-    frame.removeAttribute('srcdoc');frame.src=url;link.href=url;link.download=fileName;link.hidden=false;v.host.querySelector('[data-pdf-retry]').hidden=true;message(v,nativeOpened?pdfCaption(dte)+' · abierto en el visor de Windows':pdfCaption(dte),true);
-    const printBtn=v.host.querySelector('[data-pdf-print]');if(nativeOpened){printBtn.hidden=false;printBtn.textContent='Abrir PDF';}
+    let viewerOpened=!!nativeOpened;
+    if(!viewerOpened&&window.SiasDocumentViewer){
+     viewerOpened=window.SiasDocumentViewer.open({url,kind:'pdf',title:pdfCaption(dte),downloadName:fileName});
+    }
+    v.viewerEntry=viewerOpened?(window.SiasDocumentViewer?.current||{url,kind:'pdf',title:pdfCaption(dte),downloadName:fileName}):null;
+    frame.onload=()=>{if(v.discarded)return;v.ready=true;if(!viewerOpened)requestPrint(v,frame.contentWindow);};
+    frame.removeAttribute('srcdoc');
+    if(viewerOpened){frame.removeAttribute('src');v.ready=true;}else{frame.src=url;}
+    link.href=url;link.download=fileName;link.hidden=false;
+    v.host.querySelector('[data-pdf-retry]').hidden=true;
+    message(v,viewerOpened?pdfCaption(dte)+' · vista previa dentro de SiasCloud':pdfCaption(dte),!viewerOpened);
+    const printBtn=v.host.querySelector('[data-pdf-print]');
+    if(viewerOpened){printBtn.hidden=false;printBtn.textContent='Ver PDF';}
     const reload=v.host.querySelector('[data-pdf-refresh]');reload.hidden=false;reload.onclick=()=>refreshA4(dte,v,reload);
     if(v.pdfUrl)release(v.pdfUrl);v.pdfUrl=url;setTimeout(()=>release(url),900000);return true;
    }catch(error){if(attempt<2&&/PDF_NO_DISPONIBLE|PDF.*(?:pendiente|no.*disponible)/i.test(error.message)){message(v,'DTE emitido. Sincronizando PDF oficial…');await new Promise(r=>setTimeout(r,150*(attempt+1)));continue;}throw error;}
@@ -125,12 +146,36 @@
   const extraPhone=phone&&(!digits||!printed.replace(/\D/g,'').includes(digits))?`<p class="provider recipient-phone">Teléfono: ${safe(phone)}</p>`:'';
   const is58=format==='58MM',paper=is58?'58mm':'80mm',content=is58?'52mm':'72mm',font=is58?'8.4px':'10.5px',company=(A.state.me?.companies||[]).find(c=>c.id===A.state.me?.companyId)||{},logo=(company.show_logo_documents!==false&&company.logo_url)?company.logo_url:'';return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DTE ${safe(ticket.folio||'')} · ${paper}</title><style>@page{size:${paper} auto;margin:0}*{box-sizing:border-box}html,body{margin:0;padding:0;background:#fff;color:#000}body{font-family:"Courier New",monospace}.toolbar{position:sticky;top:0;display:flex;gap:8px;justify-content:center;padding:10px;background:#eef3f9;border-bottom:1px solid #ccd6e2;font:13px system-ui;z-index:2}.toolbar button{border:0;border-radius:8px;padding:9px 14px;background:#1769d2;color:#fff;font-weight:700;cursor:pointer}.ticket{width:${content};margin:0 auto;padding:${is58?'2.5mm 1.5mm 5mm':'3mm 2mm 6mm'};overflow:hidden}.company-logo{display:block;max-width:${is58?'34mm':'48mm'};max-height:${is58?'15mm':'20mm'};object-fit:contain;margin:0 auto 3mm}.provider{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;font-size:${font};line-height:1.25}.ted{display:flex;justify-content:center;width:100%;margin:${is58?'3mm':'4mm'} 0}.ted svg{display:block;width:100%;max-width:100%;height:auto}.meta{text-align:center;font:700 ${is58?'7.5px':'9px'} Arial,sans-serif;margin:2mm 0}.warning{font:8px Arial,sans-serif;text-align:center;margin-top:2mm}@media print{.toolbar{display:none}.ticket{margin:0 auto}}</style></head><body><div class="toolbar"><button onclick="window.print()">Imprimir ${paper}</button></div><main class="ticket">${logo?`<img class="company-logo" src="${safe(logo)}" alt="Logotipo de ${safe(company.trade_name||company.legal_name||'empresa')}">`:''}<pre class="provider">${safe(ticket.head_text||'')}</pre>${extraPhone}<div class="ted">${ticket.ted_svg||''}</div><pre class="provider">${safe(ticket.foot_text||'')}</pre><div class="meta">DTE ${safe(ticket.document_type)} · Folio ${safe(ticket.folio)} · ${safe(ticket.environment||'')}</div><div class="warning">Representación térmica del mismo DTE emitido por Facturacion.cl. No genera un nuevo folio.</div></main></body></html>`;}
  async function showThermal(dte,v,format){assertContext(v);message(v,`DTE emitido · folio ${dte.folio||'confirmado'}. Consultando ticket térmico oficial…`);const ticket=await A.erpCall('billing.ticket',{id:dte.id,format});assertContext(v);return showHtml(thermalHtml(ticket,format),v,`Ticket ${format==='58MM'?'57/58 mm':'80 mm'} · mismo DTE folio ${ticket.folio}`);}
- async function show(dte,v=view(),format){if(dte?.status&&dte.status!=='EMITIDO'){message(v,'La emisión todavía no está confirmada. Revisa su estado antes de imprimir.',true);return false;}if(!dte?.id){message(v,'No se encontró el DTE emitido.',true);return false;}const selected=(format||await preferred(dte)).toUpperCase();try{return selected==='A4'?await showA4(dte,v):await showThermal(dte,v,selected==='58MM'?'58MM':'80MM');}catch(error){message(v,'El documento ya fue emitido. No se pudo preparar esta impresión: '+A.errorText(error)+'. No se volverá a emitir.',true);const retry=v.host.querySelector('[data-pdf-retry]');if(retry){retry.hidden=false;retry.onclick=async()=>{A.setBusy?.(retry,true,'Consultando…');try{await show(dte,v,selected);}finally{A.setBusy?.(retry,false);}};}return false;}}
+ async function show(dte,v=view(),format){
+  if(!dte?.id){message(v,'No se encontró el DTE emitido.',true);return false;}
+  if(dte?.status&&dte.status!=='EMITIDO'){
+   message(v,'Sincronizando el estado del DTE con Facturacion.cl…');
+   try{const sync=await A.erpCall('billing.reconcile',{id:dte.id});Object.assign(dte,sync.document||{});}
+   catch(error){message(v,'No se pudo sincronizar todavía: '+A.errorText(error),true);}
+   if(dte.status!=='EMITIDO'){message(v,'La emisión sigue pendiente de confirmación. SiasCloud conservará el mismo intento y no generará otro folio.',true);return false;}
+  }
+  const selected=(format||await preferred(dte)).toUpperCase();
+  try{
+   if(selected==='A4')return await showA4(dte,v);
+   try{return await showThermal(dte,v,selected==='58MM'?'58MM':'80MM');}
+   catch(error){
+    const text=String(error?.message||error);
+    if(!/TICKET[ _]TERMICO[ _](?:NO[ _]HABILITADO|PDF417[ _]NO[ _]GENERADO)|FETICKET|BETICKET|m[oó]dulo.*(?:no|sin).*(?:habilit|activ)|no.*(?:habilit|activ).*m[oó]dulo/i.test(text))throw error;
+    message(v,'El formato térmico no está habilitado. Abriendo el PDF oficial del mismo folio…',true);
+    return await showA4(dte,v);
+   }
+  }catch(error){
+   message(v,'El documento ya fue emitido. No se pudo preparar esta impresión: '+A.errorText(error)+'. No se volverá a emitir.',true);
+   const retry=v.host.querySelector('[data-pdf-retry]');
+   if(retry){retry.hidden=false;retry.onclick=async()=>{A.setBusy?.(retry,true,'Consultando…');try{await show(dte,v,selected);}finally{A.setBusy?.(retry,false);}};}
+   return false;
+  }
+ }
  async function recipient(payload){
   try{const r=await A.erpCall('billing.recipient.get',payload);if(r.phone_field_ready!==true)throw new Error('Actualización de documentos tributarios pendiente. Actualiza el backend de SiasCloud.');return r;}
   catch(error){if(/Acción ERP no reconocida|ACCION_NO_EXISTE/.test(error.message||''))throw new Error('Actualización de documentos tributarios pendiente. Actualiza el backend de SiasCloud.');throw error;}
  }
- async function emit(payload,format,options={}){const v=options.view||view(options),progress=progressStart('Validando receptor y preparando DTE…');try{
+ async function performEmission(payload,format,options={}){const v=options.view||view(options),progress=progressStart('Validando receptor y preparando DTE…');try{
   // Prefetch de configuración en paralelo para no agregar latencia después de emitir.
   const formatPromise=format?Promise.resolve(format):preferred({document_type:payload.document_type});
   // El POS ya cargó el teléfono en el modal. El backend valida el receptor al emitir.
@@ -141,5 +186,12 @@
   const fmt=String(format||await formatPromise).toUpperCase();result.pdf_opened=await show(result.document,v,fmt);
   progressDone(progress,result.pdf_opened?'Documento listo para abrir / imprimir':'DTE emitido. Opciones de impresión listas');return result;
  }catch(error){progressFail(progress,'La emisión no quedó confirmada');message(v,'La emisión no está confirmada: '+A.errorText(error)+'. Revisa el historial antes de volver a emitir.',true);throw error;}}
+ function emit(payload,format,options={}){
+  const key=JSON.stringify([A.state.token,A.state.me?.companyId,payload.document_id,payload.document_type,payload.request_key||'MAIN']);
+  const running=pendingEmissions.get(key);
+  if(running){if(options.view&&options.view!==running.view)discard(options.view);return running.promise;}
+  const operation=performEmission(payload,format,options).finally(()=>pendingEmissions.delete(key));
+  pendingEmissions.set(key,{promise:operation,view:options.view});return operation;
+ }
  window.SiasDtePdf={init:api=>{A=api;},emit,recipient,prepare:view,discard,showHtml,open:(id,format,options={})=>show({id,status:'EMITIDO'},options.view||view(options),format)};
 })();

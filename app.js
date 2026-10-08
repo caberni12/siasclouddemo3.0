@@ -189,16 +189,55 @@
   }
   function toast(msg, error=false){ if(!msg)return;const t=$("#toast"); t.textContent=msg; t.className=`toast show${error?" error":""}`; clearTimeout(toast.t); toast.t=setTimeout(()=>t.className="toast",3200); }
   function bootMessage(msg=""){ $("#bootMessage").textContent=msg; }
-  function errorText(v,fallback="Error inesperado"){ if(v?.code==='OBSOLETE_VIEW')return '';if(typeof v==="string"&&v.trim()) return v; if(v&&typeof v==="object"){ const a=[v.message,v.details,v.hint,v.code].filter(x=>typeof x==="string"&&x.trim()); if(a.length) return a.join(" | "); console.error("SiasCloud error detail:",v); } return fallback; }
+  function documentErrorText(message){
+    const errors={
+      DOCUMENTO_CON_DTE_REQUIERE_NOTA_TRIBUTARIA:'Este documento tiene un DTE emitido o una emisión pendiente. Revisa su estado en Facturación; si ya está emitido, corresponde una nota tributaria.',
+      DOCUMENTO_CON_DERIVADOS_ACTIVOS:'Anula primero los documentos derivados activos. Puedes identificarlos en Ver flujo.',
+      DOCUMENTO_CON_PAGOS_CONFIRMADOS:'Este documento tiene pagos confirmados. Revisa y resuelve esos pagos antes de anularlo.',
+      SOLO_BORRADOR_EDITABLE:'Solo puedes editar el detalle de un borrador. Para un documento confirmado, usa Responsables y notas o el flujo de corrección correspondiente.',
+      ORIGEN_YA_TIENE_DOCUMENTO_DERIVADO:'Este documento ya tiene un derivado activo. Abre Ver flujo y continúa desde ese documento.',
+      FLUJO_DOCUMENTAL_CERRADO:'El flujo de este documento está cerrado y no permite nuevas conversiones.',
+      ORIGEN_DEBE_ESTAR_CONFIRMADO:'Confirma el documento de origen antes de convertirlo.',
+      CONVERSION_NO_VALIDA:'La conversión seleccionada no corresponde al tipo de documento de origen.',
+      FACTURAR_DESDE_GUIA_DERIVADA:'Continúa la venta desde la guía ya creada. Puedes abrirla en Ver flujo.',
+      FACTURAR_DESDE_PEDIDO_DERIVADO:'Continúa la venta desde el pedido ya creado. Puedes abrirlo en Ver flujo.',
+      FACTURA_BOLETA_EMITIDA_REQUERIDA:'Para cerrar el flujo debe existir la factura o boleta emitida en el ambiente activo. Esto no impide imprimir la guía.',
+      DTE_EMITIDO_NO_ELIMINABLE:'Este DTE ya está emitido y no se puede eliminar. Debe corregirse mediante nota tributaria.',
+      DTE_PRODUCCION_NO_LIBERABLE_SIN_RECHAZO_CONFIRMADO:'En producción no se libera un intento mientras exista posibilidad de que el proveedor lo haya emitido. Usa Revisar para reconciliarlo.',
+      DTE_PRODUCCION_NO_SE_ELIMINA:'Los registros tributarios de producción no se eliminan. SUPERADMIN puede reconciliar o liberar únicamente rechazos confirmados.',
+      DTE_CON_FOLIO_NO_ELIMINABLE:'El registro tiene un folio o PDF asociado y debe conservarse por trazabilidad.',
+      MOTIVO_CORRECCION_REQUERIDO:'Ingresa un motivo de al menos 8 caracteres para corregir un documento confirmado.',
+      DOCUMENTO_NO_EDITABLE:'Este documento está anulado o ya no permite esta modificación.',
+      DOCUMENTO_ANULADO:'Este documento está anulado y no se puede confirmar.',
+      RESPALDO_REQUERIDO:'Primero genera y descarga un respaldo completo de esta empresa.',
+      RESPALDO_NO_CONFIRMADO:'El respaldo obligatorio todavía no está confirmado como descargado.',
+      RESPALDO_VENCIDO:'El respaldo de seguridad tiene más de 24 horas. Genera uno nuevo antes de reiniciar.',
+      RESPALDO_INVALIDO:'El respaldo seleccionado no es válido.',
+      RESPALDO_NO_CORRESPONDE_EMPRESA:'El archivo pertenece a otra empresa y no puede restaurarse aquí.',
+      RESPALDO_INTEGRIDAD_INVALIDA:'El archivo de respaldo fue modificado o está incompleto.',
+      CONFIRMACION_REINICIO_INVALIDA:'Escribe exactamente REINICIAR SIASCLOUD para confirmar.',
+      CONFIRMACION_RESTAURACION_INVALIDA:'Escribe exactamente RESTAURAR SIASCLOUD para confirmar.',
+      MOTIVO_REINICIO_REQUERIDO:'Ingresa un motivo de al menos 8 caracteres.',
+      MODO_REINICIO_INVALIDO:'La modalidad de reinicio no es válida.',
+      SOLO_SUPERADMIN:'Esta operación está disponible exclusivamente para SUPERADMIN.',
+      ACTUALIZACION_BASE_REQUERIDA:'La estructura de SiasCloud necesita actualización. Administración debe aplicar SQL_MAESTRO_SIASCLOUD_V3_3_0.sql y actualizar el backend.'
+    };
+    const raw=String(message).trim();
+    if(/(?:column|relation|function).*does not exist|could not find.*(?:column|table|function)|schema cache|PGRST204|42703/i.test(raw))return errors.ACTUALIZACION_BASE_REQUERIDA;
+    const normalized=raw.replaceAll('_',' ');
+    const key=Object.keys(errors).find(code=>normalized===code.replaceAll('_',' ')||normalized.startsWith(code.replaceAll('_',' ')+' |'));
+    return key?errors[key]:message;
+  }
+  function errorText(v,fallback="Error inesperado"){ if(v?.code==='OBSOLETE_VIEW')return '';if(typeof v==="string"&&v.trim()) return documentErrorText(v); if(v&&typeof v==="object"){ const a=[v.message,v.details,v.hint,v.code].filter(x=>typeof x==="string"&&x.trim()); if(a.length) return documentErrorText(a.join(" | ")); console.error("SiasCloud error detail:",v); } return fallback; }
   async function apiFetch(url,action,payload={},scope="erp"){
-    const abort=new AbortController(),timeout=setTimeout(()=>abort.abort(),action.startsWith('imports.bulk.')?60000:90000);
+    const abort=new AbortController(),timeout=setTimeout(()=>abort.abort(),action.startsWith('system.backup.')||action.startsWith('system.reset.')||action.startsWith('system.cleanup.')?240000:action.startsWith('imports.bulk.')?60000:90000);
     try{
     const stamp=viewStamp(),screenRead=action!=='notifications.list'&&/(?:\.(?:list|get|catalog|summary|sessions|search|flow|meta|items)$|^dashboard$)/.test(action);
     const headers={"Content-Type":"application/json"}; if(state.token) headers["X-Sias-Session"]=state.token;
     const res=await fetch(url,{method:"POST",headers,body:JSON.stringify({scope,action,payload}),cache:"no-store",signal:abort.signal});
     let data={}; try{data=await res.json();}catch{throw new Error(`Respuesta inválida del servidor (${res.status})`)}
     if(stamp.token!==state.token||(screenRead&&!sameView(stamp)))throw Object.assign(new Error(''),{code:'OBSOLETE_VIEW'});
-    if(!res.ok||!data.ok){ if(res.status===401 && state.token){ sessionStorage.removeItem("sias_token"); state.token=""; state.me=null; showLogin("La sesión expiró. Ingresa nuevamente."); } throw new Error(errorText(data.message ?? data.error ?? data, data.code||`Error ${res.status}`)); }
+    if(!res.ok||!data.ok){ if(res.status===401 && state.token){ sessionStorage.removeItem("sias_token"); state.token=""; state.me=null; showLogin("La sesión expiró. Ingresa nuevamente."); } throw Object.assign(new Error(errorText(data.message ?? data.error ?? data, data.code||`Error ${res.status}`)),{code:data.code||'API_ERROR'}); }
     return data;
     }catch(error){if(abort.signal.aborted)throw new Error("La respuesta tardó demasiado. Revisa el estado de la operación antes de continuar.");throw error;}finally{clearTimeout(timeout);}
   }
@@ -206,7 +245,7 @@
   async function erpCall(action,payload={}){ return apiFetch(erpEndpoint(),action,payload); }
   function hideAuthForms(){ ["#serverForm","#setupForm","#loginForm"].forEach(x=>$(x).classList.add("hidden")); $("#bootLoading").classList.add("hidden"); }
   function showServer(msg=""){ hideAuthForms(); $("#serverForm").classList.remove("hidden"); $("#serverForm [name=functions_url]").value=serverUrl(); bootMessage(msg); hideErpSplash(); }
-  function showLogin(msg=""){ state.viewRevision++;if(modal?.open)closeModal(true);$("#app").classList.add("hidden"); $("#boot").classList.remove("hidden"); hideAuthForms(); $("#loginForm").classList.remove("hidden"); bootMessage(msg); bindPasswordToggles($("#loginForm")); hideErpSplash(); }
+  function showLogin(msg=""){ const notice=sessionStorage.getItem("sias_cleanup_notice")||"";sessionStorage.removeItem("sias_cleanup_notice");msg=msg||notice;state.viewRevision++;if(modal?.open)closeModal(true);$("#app").classList.add("hidden"); $("#boot").classList.remove("hidden"); hideAuthForms(); $("#loginForm").classList.remove("hidden"); bootMessage(msg); bindPasswordToggles($("#loginForm")); hideErpSplash(); }
   function showSetup(){ hideAuthForms(); $("#setupForm").classList.remove("hidden"); bootMessage(""); bindPasswordToggles($("#setupForm")); hideErpSplash(); }
 
   async function boot(){
@@ -221,7 +260,7 @@
     }catch(e){ const m=errorText(e,"Error de conexión"); if(cfg.fixedConnection){ hideAuthForms(); bootMessage(e.code==='BACKEND_VERSION_INCOMPATIBLE'?m:`No fue posible conectar con el servidor configurado: ${m}`); hideErpSplash(); } else { showServer(e.code==='BACKEND_VERSION_INCOMPATIBLE'?m:`No fue posible conectar: ${m}`); } }
   }
 
-  $("#serverForm").addEventListener("submit",async e=>{ e.preventDefault(); const btn=e.submitter; setBusy(btn,true,"Comprobando…"); try{ const v=formData(e.currentTarget).get("functions_url").trim().replace(/\/$/,""); if(!/^https:\/\/.+\/functions\/v1$/i.test(v)) throw new Error("Usa una URL como https://TU-PROYECTO.supabase.co/functions/v1"); localStorage.setItem("sias_functions_url",v); const s=await call("status"); s.installed?showLogin("Servidor conectado correctamente."):showSetup(); }catch(err){bootMessage(errorText(err,"No se pudo completar la operación"))}finally{setBusy(btn,false)} });
+  $("#serverForm").addEventListener("submit",async e=>{ e.preventDefault(); const btn=e.submitter; setBusy(btn,true,"Comprobando…"); try{ const v=formData(e.currentTarget).get("functions_url").trim().replace(/\/$/,""); if(!/^https:\/\/.+\/functions\/v1$/i.test(v)) throw new Error("Usa la URL de Servicios Cloud SiasCloud indicada por Administración"); localStorage.setItem("sias_functions_url",v); const s=await call("status"); s.installed?showLogin("Servidor conectado correctamente."):showSetup(); }catch(err){bootMessage(errorText(err,"No se pudo completar la operación"))}finally{setBusy(btn,false)} });
   $("#changeServerBtn").addEventListener("click",()=>showServer());
   if(cfg.fixedConnection) $("#changeServerBtn").classList.add("hidden");
   $("#setupForm").addEventListener("submit",async e=>{ e.preventDefault(); const btn=e.submitter; setBusy(btn,true,"Creando sistema…"); bootMessage(""); try{ const f=Object.fromEntries(formData(e.currentTarget)); await call("bootstrap",f); toast("Instalación inicial completada"); showLogin("Sistema creado. Ingresa con la clave que acabas de definir."); }catch(err){bootMessage(errorText(err,"No se pudo completar la operación"))}finally{setBusy(btn,false)} });
@@ -355,7 +394,7 @@
     }
     state.notificationKnown=null;
     refreshNotificationBell();
-    clearInterval(state.notificationTimer);state.notificationTimer=setInterval(()=>{if(state.token&&state.me)refreshNotificationBell()},10000);
+    clearInterval(state.notificationTimer);state.notificationTimer=setInterval(()=>{if(!document.hidden&&state.token&&state.me)refreshNotificationBell()},15000);
     navigate(location.hash.replace("#","")||"dashboard");
   }
   function navigate(route){
@@ -386,7 +425,7 @@
       if(!sameView(stamp)||e?.code==='OBSOLETE_VIEW')return;
       const detail=errorText(e,"No fue posible cargar este módulo"),schemaMissing=/(?:column|relation|function).*does not exist|could not find.*(?:column|table|function)|schema cache/i.test(detail);
       if(schemaMissing)console.error("SiasCloud: estructura pendiente de actualizar",e);
-      c.innerHTML=`<div class="card"><h3>${schemaMissing?"Actualización de la base requerida":"Error"}</h3><p class="danger-text">${esc(schemaMissing?"Aplica las actualizaciones SQL indicadas en LEEME_PRIMERO.md, incluida ACTUALIZACION_REVISION_V3_1_5.sql, y vuelve a intentar.":detail)}</p><button class="btn primary" id="retry">Reintentar</button></div>`;
+      c.innerHTML=`<div class="card"><h3>${schemaMissing?"Actualización de la base requerida":"Error"}</h3><p class="danger-text">${esc(schemaMissing?"La estructura de la base necesita actualizarse. Solicita a Administración aplicar SQL_MAESTRO_SIASCLOUD_V3_3_0.sql incluido en esta entrega y vuelve a intentar.":detail)}</p><button class="btn primary" id="retry">Reintentar</button></div>`;
       $("#retry")?.addEventListener("click",()=>render(false));
     }finally{endModuleSplash();}
   }
@@ -400,6 +439,7 @@
     sidebarMenuBtn?.setAttribute("aria-expanded",String(!collapsed));
   }
   function applySidebarState(){
+    appShell.classList.toggle('sias-hover-sidebar',canHoverSidebar());
     if(isMobileMenu()){
       appShell.classList.remove("sidebar-collapsed");
       sidebar.classList.remove("open");
@@ -414,6 +454,9 @@
   }
   applySidebarState();
   window.addEventListener("resize",applySidebarState);
+  document.addEventListener('visibilitychange',()=>{
+    if(!document.hidden && state.token && state.me) refreshNotificationBell();
+  });
 
   /* Menú inteligente: en escritorio con mouse se expande al entrar y se contrae al salir. */
   sidebar.addEventListener("mouseenter",()=>{if(canHoverSidebar())setDesktopSidebar(false)});
@@ -480,9 +523,9 @@
   document.addEventListener("input",saveContentDraft,true);document.addEventListener("change",saveContentDraft,true);
   modalForm.addEventListener("submit",async e=>{
     e.preventDefault();if(!modalHandler||modal.dataset.submitting==="1")return;
-    const handler=modalHandler,btn=$("#modalActions .primary");modal.dataset.submitting="1";setBusy(btn,true);
-    try{const outcome=await handler(formData(e.currentTarget));closeModal(true);if(!outcome?.skipRender)await render();setBusy(btn,false);modal.dataset.submitting="0";toast(outcome?.toast||"Cambios guardados");if(typeof outcome?.afterSave==="function")await outcome.afterSave();}
-    catch(err){toast(errorText(err),true);}
+    const handler=modalHandler,btn=$("#modalActions .primary");let saved=false;modal.dataset.submitting="1";setBusy(btn,true);
+    try{const outcome=await handler(formData(e.currentTarget));saved=true;closeModal(true);if(!outcome?.skipRender)await render();setBusy(btn,false);modal.dataset.submitting="0";toast(outcome?.toast||"Cambios guardados");if(typeof outcome?.afterSave==="function")await outcome.afterSave();}
+    catch(err){const detail=errorText(err);if(detail)toast(saved?'Cambios guardados. No se pudo completar la actualización de pantalla: '+detail:detail,true);}
     finally{modal.dataset.submitting="0";if(btn.disabled)setBusy(btn,false);}
   });
 
@@ -633,9 +676,65 @@
     $('#savePrintFormats')?.addEventListener('click',async e=>{const btn=e.currentTarget;setBusy(btn,true,'Guardando…');try{const payload=printDefaults();payload.defaults={tributary:$('#printDefaultTributary').value,system:$('#printDefaultSystem').value,pos:$('#printDefaultPos').value};payload.issuance={POS:Number($('#printIssuePos').value),SALE:Number($('#printIssueSale').value),WHOLESALE:Number($('#printIssueWholesale').value)};$$('.print-format-select').forEach(x=>payload[x.dataset.printGroup][x.dataset.printKey]=x.value);const saved=await erpCall('printing.config.save',{formats:payload});state.cache.printFormats=normalizePrintUi(saved.formats);toast('Formatos de impresión guardados');if(state.me.companyId===company&&state.route==='print-formats')await renderPrintFormats();}catch(err){toast(errorText(err),true);}finally{if(btn.isConnected)setBusy(btn,false);}});
   }
 
+  function safeFilePart(value){return String(value||'SiasCloud').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9_-]+/gi,'_').replace(/^_+|_+$/g,'').slice(0,70)||'SiasCloud';}
+  function downloadJsonFile(name,data){const blob=new Blob([JSON.stringify(data)],{type:'application/json;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);}
+  async function createSystemBackup(button){
+    if(!state.me?.user?.superadmin)throw new Error('SOLO_SUPERADMIN');const company=activeCompany();setBusy(button,true,'Generando respaldo…');
+    try{const r=await call('system.backup.export'),backup=r.backup;if(!backup?.snapshot_id)throw new Error('RESPALDO_INVALIDO');const stamp=new Date().toISOString().replace(/[:.]/g,'-'),name=`SiasCloud_RESPALDO_${safeFilePart(company.trade_name||company.legal_name)}_${stamp}.json`;downloadJsonFile(name,backup);await call('system.backup.confirm',{snapshot_id:backup.snapshot_id,checksum:backup.checksum});toast('Respaldo completo generado y descargado');await renderSettings();}
+    finally{if(button?.isConnected)setBusy(button,false);}
+  }
+  function resetModeLabel(mode){return ({TEST:'Limpiar pruebas tributarias',OPERATIONAL:'Reiniciar operación',FULL:'Reinicio total operativo'})[mode]||mode;}
+  function resetModeDescription(mode){return ({TEST:'Elimina únicamente DTE de prueba/certificación. No toca documentos tributarios de producción.',OPERATIONAL:'Limpia documentos, caja, pagos, inventario, movimientos e historial operativo. Conserva maestros, empresa, usuarios y configuración.',FULL:'Deja la empresa comercialmente en cero: además limpia productos, clientes, proveedores, listas, personal y bodegas. Conserva empresa, usuarios, configuración y los DTE de producción.'})[mode]||'';}
+  function openSystemReset(mode,recovery){
+    const snapshot=(recovery?.snapshots||[]).find(x=>x.status==='DOWNLOADED');if(!snapshot){toast('Primero genera y descarga un respaldo completo.',true);return;}
+    const counts=recovery?.counts||{},prod=Number(counts.dte_production||0),danger=mode==='FULL'?'danger':'warn';
+    openModal(resetModeLabel(mode),`<div class="system-reset-confirm"><div class="section-note ${danger}"><strong>${esc(resetModeDescription(mode))}</strong>${prod?`<br><br>Hay <b>${prod}</b> registro(s) DTE de PRODUCCIÓN. Se conservarán como trazabilidad tributaria y nunca se reutilizarán sus folios.`:''}</div><div class="reset-summary-grid"><div><small>Documentos</small><strong>${Number(counts.documents||0).toLocaleString('es-CL')}</strong></div><div><small>Movimientos</small><strong>${Number(counts.stock_movements||0).toLocaleString('es-CL')}</strong></div><div><small>Productos</small><strong>${Number(counts.products||0).toLocaleString('es-CL')}</strong></div><div><small>Clientes</small><strong>${Number(counts.customers||0).toLocaleString('es-CL')}</strong></div></div><label>Motivo del reinicio<textarea name="reason" minlength="8" required placeholder="Ej. Fin de período de pruebas y preparación de salida a producción"></textarea></label><label>Tu contraseña SUPERADMIN<div class="password-field"><input id="resetAdminPassword" name="password" type="password" autocomplete="current-password" required><button type="button" class="password-toggle" data-password-toggle="#resetAdminPassword" aria-label="Mostrar contraseña"></button></div></label><label>Confirmación<input name="confirmation" required autocomplete="off" placeholder="REINICIAR SIASCLOUD"></label><div class="section-note">Respaldo obligatorio: <span class="mono">${esc(snapshot.id)}</span><br>Descargado ${esc(fmtDate(snapshot.downloaded_at||snapshot.created_at))}</div></div>`,async fd=>{if(String(fd.get('confirmation')||'').trim()!=='REINICIAR SIASCLOUD')throw new Error('CONFIRMACION_REINICIO_INVALIDA');const r=await call('system.reset.execute',{mode,backup_id:snapshot.id,password:fd.get('password'),confirmation:fd.get('confirmation'),reason:fd.get('reason')});state.cache={};return {toast:`${resetModeLabel(mode)} completado`,afterSave:async()=>{await call('me').then(me=>state.me=me).catch(()=>{});}};},mode==='FULL'?'Reiniciar sistema':'Ejecutar limpieza');
+    bindPasswordToggles(modalForm);
+  }
+  function openRestoreBackup(){
+    openModal('Restaurar respaldo SiasCloud',`<div class="system-reset-confirm"><div class="section-note warn"><strong>La restauración reemplazará el estado operativo actual por el contenido del respaldo.</strong><br>Los DTE de PRODUCCIÓN existentes se conservan aunque sean posteriores al respaldo.</div><label>Archivo de respaldo<input name="backup_file" type="file" accept="application/json,.json" required></label><label>Motivo<textarea name="reason" minlength="8" required>Restauración controlada de respaldo SiasCloud</textarea></label><label>Tu contraseña SUPERADMIN<div class="password-field"><input id="restoreAdminPassword" name="password" type="password" autocomplete="current-password" required><button type="button" class="password-toggle" data-password-toggle="#restoreAdminPassword" aria-label="Mostrar contraseña"></button></div></label><label>Confirmación<input name="confirmation" required autocomplete="off" placeholder="RESTAURAR SIASCLOUD"></label></div>`,async fd=>{const file=fd.get('backup_file');if(!(file instanceof File)||!file.size)throw new Error('Selecciona un respaldo SiasCloud');if(file.size>45*1024*1024)throw new Error('El respaldo supera 45 MB. Contacta administración para una restauración asistida.');let backup;try{backup=JSON.parse(await file.text())}catch{throw new Error('RESPALDO_INVALIDO')}const r=await call('system.backup.restore',{backup,password:fd.get('password'),confirmation:fd.get('confirmation'),reason:fd.get('reason')});state.cache={};return {toast:'Respaldo restaurado correctamente'};},'Restaurar respaldo');bindPasswordToggles(modalForm);
+  }
+  const cleanupTableLabels={sias_documents:'Documentos',sias_document_items:'Líneas de documentos',sias_external_dte:'Documentos tributarios',sias_sii_dte:'Emisión tributaria',sias_sii_dte_events:'Eventos tributarios',sias_products:'Productos',sias_product_images:'Imágenes de productos',sias_product_recipe:'Recetas',sias_product_changes:'Cambios de productos',sias_cost_history:'Historial de costos',sias_customers:'Clientes',sias_customer_accounts:'Accesos mayoristas',sias_customer_sessions:'Sesiones mayoristas',sias_customer_credits:'Créditos',sias_credit_applications:'Aplicaciones de crédito',sias_suppliers:'Proveedores',sias_price_lists:'Listas de precios',sias_price_list_items:'Precios por producto',sias_warehouses:'Bodegas',sias_staff:'Personal',sias_stock:'Existencias',sias_stock_movements:'Movimientos de inventario',sias_cash_sessions:'Cajas',sias_cash_movements:'Movimientos de caja',sias_pos_canceled:'Ventas canceladas',sias_payments:'Pagos',sias_journals:'Asientos contables',sias_journal_lines:'Líneas contables',sias_rcv_rows:'Libro de compras y ventas',sias_audit:'Auditoría',sias_operational_events:'Incidencias',sias_sequences:'Numeración interna',sias_users:'Usuarios',sias_user_roles:'Asignaciones de roles',sias_user_companies:'Accesos a empresas',sias_roles:'Roles',sias_role_permissions:'Permisos de roles',sias_sessions:'Sesiones',sias_notifications:'Notificaciones',sias_settings:'Parámetros',sias_secrets:'Credenciales',sias_store_settings:'Configuración de tienda',sias_billing_config:'Configuración de facturación',sias_sii_config:'Configuración tributaria',sias_sii_certificates:'Certificados',sias_sii_cafs:'Autorizaciones de folios',sias_sii_certification_steps:'Certificación',sias_sii_received_dte:'Documentos recibidos',sias_import_jobs:'Importaciones',sias_import_job_rows:'Filas importadas',sias_import_job_uploads:'Archivos importados',sias_import_batches:'Lotes importados',sias_backup_snapshots:'Respaldos registrados',sias_reset_history:'Reinicios registrados',sias_companies:'Empresas'};
+  const cleanupLabel=table=>cleanupTableLabels[table]||'Otros registros relacionados';
+  function cleanupLocalData(scope,modules){
+    const company=state.me?.companyId,global=scope==='TOTAL';
+    const clearPos=global||modules.some(x=>['OPERATION','INVENTORY','PRODUCTS','CUSTOMERS','WAREHOUSES','PRICES','STAFF','USERS'].includes(x));
+    try{for(const key of Object.keys(localStorage)){
+      const draft=key.startsWith(DRAFT_PREFIX+':')&&(global||key.startsWith(DRAFT_PREFIX+':'+company+':'));
+      const cart=clearPos&&['sias_pos_cart_v2:','sias_pos_pending_v2:'].some(prefix=>key.startsWith(prefix)&&(global||key.startsWith(prefix+company+':')));
+      if(draft||cart||(key==='sias_theme_cache'&&(global||modules.includes('CONFIGURATION'))))localStorage.removeItem(key);
+    }}catch{}
+    state.cache={};clearInterval(state.notificationTimer);
+    if(global){sessionStorage.removeItem('sias_token');state.token='';state.me=null;sessionStorage.setItem('sias_cleanup_notice','Sistema en cero. Ingresa con tu misma cuenta y contraseña SUPERADMIN.');}
+  }
+  function openCleanupConfirmation(preview){
+    const total=preview.scope==='TOTAL',phrase=total?'BORRAR TODO SIASCLOUD':'LIMPIAR MODULOS SIASCLOUD';
+    const technical=['sias_permissions','sias_modules','sias_installation','sias_roles','sias_role_permissions','sias_user_roles','sias_user_companies'];
+    const tables=(preview.tables||[]).filter(x=>Number(x.count)>0&&(!total||!technical.includes(x.table))).map(x=>({...x,count:total&&x.table==='sias_users'?Math.max(0,Number(x.count)-1):Number(x.count)})).filter(x=>x.count>0);
+    const names=(preview.available_modules||[]).filter(x=>(preview.modules||[]).includes(x.code)).map(x=>x.label);
+    const links=(preview.detached_relations||[]).map(x=>`<li>${esc(cleanupLabel(x.table))}: ${Number(x.count).toLocaleString('es-CL')} vínculo(s) con ${esc(cleanupLabel(x.parent))} se retirarán.</li>`).join('');
+    const text=total?`Borra los datos de todas las empresas y todos los demás usuarios. Conserva únicamente <b>${esc(state.me.user.email)}</b> como SUPERADMIN y una empresa vacía para volver a configurar.`:`Empresa: <b>${esc(activeCompany().trade_name||activeCompany().legal_name)}</b>. Módulos: ${esc(names.join(', '))}.`;
+    openModal(total?'Dejar todo el sistema en cero':'Confirmar limpieza personalizada',`<div class="system-reset-confirm"><div class="section-note danger">${text}<br>El borrado es definitivo y no exige generar un respaldo.</div><div class="list mt">${tables.map(x=>`<div class="list-item"><span>${esc(cleanupLabel(x.table))}${x.dependency?' · dato relacionado':''}</span><strong>${x.count.toLocaleString('es-CL')}</strong></div>`).join('')||'<div class="empty">No hay registros para borrar.</div>'}</div>${links?`<div class="section-note warn mt">Se conservarán estos registros y se quitarán los enlaces que ya no existirán:<ul>${links}</ul></div>`:''}<div class="section-note mt">La estructura del sistema y los identificadores de folios de producción ya emitidos se conservan. La limpieza local no anula esos documentos.</div><label>Motivo<textarea name="reason" minlength="8" required>${total?'Reinicio completo solicitado por SUPERADMIN':'Limpieza personalizada solicitada por SUPERADMIN'}</textarea></label><label>Contraseña SUPERADMIN<div class="password-field"><input id="cleanupAdminPassword" name="password" type="password" autocomplete="current-password" required><button type="button" class="password-toggle" data-password-toggle="#cleanupAdminPassword" aria-label="Mostrar contraseña"></button></div></label><label>Escribe ${esc(phrase)}<input name="confirmation" required autocomplete="off" placeholder="${esc(phrase)}"></label></div>`,async fd=>{
+      if(String(fd.get('confirmation')||'').trim()!==phrase)throw new Error('La confirmación debe ser '+phrase);
+      await call('system.cleanup.execute',{scope:preview.scope,modules:preview.modules||[],plan_token:preview.plan_token,password:fd.get('password'),confirmation:fd.get('confirmation'),reason:fd.get('reason')});
+      return {skipRender:true,toast:total?'Sistema en cero. SUPERADMIN conservado.':'Limpieza personalizada completada',afterSave:()=>{cleanupLocalData(preview.scope,preview.modules||[]);window.location.reload();}};
+    },total?'Borrar todo':'Limpiar selección');bindPasswordToggles(modalForm);
+  }
+  async function openSystemCleanup(scope,button){
+    setBusy(button,true,'Preparando…');try{
+      if(scope==='TOTAL'){const preview=await call('system.cleanup.preview',{scope:'TOTAL',modules:[]});openCleanupConfirmation(preview);return;}
+      const options=await call('system.cleanup.options');
+      openModal('Limpieza personalizada',`<div class="system-reset-confirm"><div class="section-note">Selecciona los módulos de la empresa <b>${esc(activeCompany().trade_name||activeCompany().legal_name)}</b>. La siguiente pantalla muestra también los datos relacionados que se eliminarán.</div><div class="list mt">${(options.modules||[]).map(x=>`<label class="toggle-card"><input type="checkbox" name="cleanup_module" value="${esc(x.code)}"><span><strong>${esc(x.label)}</strong><small>${esc(x.description)}</small></span></label>`).join('')}</div></div>`,async fd=>{
+        const modules=fd.getAll('cleanup_module').map(String);if(!modules.length)throw new Error('Selecciona al menos un módulo');
+        const preview=await call('system.cleanup.preview',{scope:'CUSTOM',modules});
+        return {skipRender:true,toast:'Vista previa preparada',afterSave:()=>openCleanupConfirmation(preview)};
+      },'Revisar selección');
+    }catch(e){toast(errorText(e),true);}finally{if(button?.isConnected)setBusy(button,false);}
+  }
+
   async function renderSettings(){
-    const company=state.me.companyId;
-    const [s,secrets,health]=await Promise.all([call("settings.list"),can("SECRETS_MANAGE")?call("secrets.list"):Promise.resolve({rows:[]}),call("status").catch(()=>({security:{}}))]);
+    const company=state.me.companyId,isSuper=state.me?.user?.superadmin===true;
+    const [s,secrets,health,recovery]=await Promise.all([call("settings.list"),can("SECRETS_MANAGE")?call("secrets.list"):Promise.resolve({rows:[]}),call("status").catch(()=>({security:{}})),isSuper?call('system.reset.preview').catch(e=>({error:errorText(e),counts:{},snapshots:[],history:[]})):Promise.resolve(null)]);
     state.cache.settings=s.rows;
     const theme=(s.rows||[]).find(x=>settingSignature(x)==='BRANDING:theme'); if(theme?.value) applyTheme(theme.value);
     const stockRows=(s.rows||[]).filter(x=>settingSignature(x)==='INVENTORY:stock_policy');
@@ -643,12 +742,18 @@
     const allowNegative=stockPolicy?.value?.allow_negative_stock===true;
     const visibleSettings=(s.rows||[]).filter(x=>settingSignature(x)!=='INVENTORY:stock_policy');
     const sec=health.security||{},productionReady=sec.production_mode&&sec.allowed_origin_configured;
-    const productionCard=`<div class="card production-readiness-card"><div class="toolbar"><div><span class="eyebrow">SEGURIDAD DE DESPLIEGUE</span><h2>Estado de producción</h2><p class="muted">SiasCloud mantiene autenticación propia; <span class="mono">verify_jwt=false</span> es intencional.</p></div><span class="badge ${productionReady?'ok':'warn'}">${productionReady?'PRODUCCIÓN PROTEGIDA':sec.production_mode?'FALTA ORIGEN':'MODO DESARROLLO'}</span></div><div class="production-readiness-grid"><div><small>Autenticación</small><strong>Sesión SiasCloud</strong></div><div><small>JWT Supabase</small><strong>Desactivado por diseño</strong></div><div><small>Origen permitido</small><strong>${sec.allowed_origin_configured?'Configurado':'Pendiente para producción'}</strong></div><div><small>Backend</small><strong>${esc(health.function_version||'—')}</strong></div></div>${sec.production_mode&&!sec.allowed_origin_configured?'<div class="section-note warn mt">Configura <span class="mono">SIASCLOUD_ALLOWED_ORIGIN</span> con el dominio real antes de operar con clientes.</div>':''}</div>`;
-    $("#content").innerHTML=productionCard+`<div class="card stock-policy-card"><div class="toolbar"><div><span class="eyebrow">INVENTARIO · POS</span><h2>Política global de stock</h2><p class="muted">Este interruptor controla todas las ventas de la empresa. No necesitas habilitarlo producto por producto.</p></div><span class="badge ${allowNegative?'warn':'ok'}" id="stockPolicyBadge">${allowNegative?'VENTA SIN STOCK ACTIVA':'STOCK PROTEGIDO'}</span></div><label class="toggle-card stock-global-switch"><input type="checkbox" id="allowNegativeStock" ${allowNegative?'checked':''} ${can("SETTINGS_MANAGE")?'':'disabled'}><span><strong>Permitir vender sin stock suficiente</strong><small>Al activarlo, una venta podrá dejar el inventario en negativo. Traslados y salidas manuales seguirán exigiendo stock disponible.</small></span></label><div class="section-note mt">Recomendación: mantenerlo desactivado salvo que tu operación necesite venta anticipada, regularización posterior o stock aún no recepcionado.</div></div><div class="two-col settings-layout"><div class="card"><div class="toolbar"><div><h2>Configuración visual y general</h2><p class="muted">Administra el sistema con controles visuales. No necesitas editar JSON ni códigos técnicos.</p></div>${can("SETTINGS_MANAGE")?'<button class="btn primary small" id="newSetting">+ Parámetro</button>':""}</div><div class="list settings-list">${visibleSettings.map(x=>`<div class="list-item setting-card"><div class="setting-card-main"><strong>${esc(settingName(x))}</strong><div class="muted">${esc(x.description||"")}</div><div class="setting-preview">${settingPreview(x)}</div></div>${can("SETTINGS_MANAGE")?`<button class="btn secondary small editSetting" data-id="${x.id}">Editar</button>`:""}</div>`).join("")}</div></div><div class="card"><div class="toolbar"><div><h2>Credenciales protegidas</h2><p class="muted">Contraseñas y claves se cifran en el servidor.</p></div>${can("SECRETS_MANAGE")?'<button class="btn primary small" id="newSecret">+ Guardar secreto</button>':""}</div><div class="section-note">Los valores protegidos nunca se muestran nuevamente en el navegador.</div><div class="list mt">${secrets.rows.map(x=>`<div class="list-item"><div><strong>${esc(x.scope)} · ${esc(x.key)}</strong><div class="muted">${esc(x.hint||"Configurado")} · ${esc(fmtDate(x.updated_at))}</div></div><span class="badge ok">PROTEGIDO</span></div>`).join("")||'<div class="empty">Sin secretos.</div>'}</div></div></div>`;
+    const productionCard=`<div class="card production-readiness-card"><div class="toolbar"><div><span class="eyebrow">SEGURIDAD DE DESPLIEGUE</span><h2>Estado de producción</h2><p class="muted">SiasCloud mantiene autenticación propia; <span class="mono">verify_jwt=false</span> es intencional.</p></div><span class="badge ${productionReady?'ok':'warn'}">${productionReady?'PRODUCCIÓN PROTEGIDA':sec.production_mode?'FALTA ORIGEN':'MODO DESARROLLO'}</span></div><div class="production-readiness-grid"><div><small>Autenticación</small><strong>Sesión SiasCloud</strong></div><div><small>Autenticación Cloud</small><strong>Desactivado por diseño</strong></div><div><small>Origen permitido</small><strong>${sec.allowed_origin_configured?'Configurado':'Pendiente para producción'}</strong></div><div><small>Backend</small><strong>${esc(health.function_version||'—')}</strong></div></div>${sec.production_mode&&!sec.allowed_origin_configured?'<div class="section-note warn mt">Configura <span class="mono">SIASCLOUD_ALLOWED_ORIGIN</span> con el dominio real antes de operar con clientes.</div>':''}</div>`;
+    let recoveryCard='';
+    if(isSuper){const latest=(recovery?.snapshots||[])[0];recoveryCard=`<div class="card system-recovery-card"><div class="toolbar"><div><span class="eyebrow">SUPERADMIN · DATOS DEL SISTEMA</span><h2>Respaldo y limpieza del sistema</h2></div><span class="badge warn">SOLO SUPERADMIN</span></div><div class="system-recovery-actions"><button class="btn primary" type="button" id="systemBackupCreate">Generar respaldo completo</button><button class="btn secondary" type="button" id="systemBackupRestore">Restaurar respaldo</button><button class="btn secondary" type="button" data-system-cleanup="CUSTOM">Limpieza personalizada</button><button class="btn danger" type="button" data-system-cleanup="TOTAL">Dejar todo en cero</button></div><div class="section-note mt">La limpieza personalizada afecta la empresa activa. El reinicio total borra los datos de todas las empresas y conserva únicamente tu SUPERADMIN. Ninguna limpieza exige generar un respaldo.</div>${latest?`<div class="section-note mt">Último respaldo: ${esc(latest.status)} · ${esc(fmtDate(latest.downloaded_at||latest.created_at))}</div>`:''}</div>`;}
+    $("#content").innerHTML=productionCard+`<div class="card stock-policy-card"><div class="toolbar"><div><span class="eyebrow">INVENTARIO · POS</span><h2>Política global de stock</h2><p class="muted">Este interruptor controla todas las ventas de la empresa. No necesitas habilitarlo producto por producto.</p></div><span class="badge ${allowNegative?'warn':'ok'}" id="stockPolicyBadge">${allowNegative?'VENTA SIN STOCK ACTIVA':'STOCK PROTEGIDO'}</span></div><label class="toggle-card stock-global-switch"><input type="checkbox" id="allowNegativeStock" ${allowNegative?'checked':''} ${can("SETTINGS_MANAGE")?'':'disabled'}><span><strong>Permitir vender sin stock suficiente</strong><small>Al activarlo, una venta podrá dejar el inventario en negativo. Traslados y salidas manuales seguirán exigiendo stock disponible.</small></span></label><div class="section-note mt">Recomendación: mantenerlo desactivado salvo que tu operación necesite venta anticipada, regularización posterior o stock aún no recepcionado.</div></div>${recoveryCard}<div class="two-col settings-layout"><div class="card"><div class="toolbar"><div><h2>Configuración visual y general</h2><p class="muted">Administra el sistema con controles visuales. No necesitas editar JSON ni códigos técnicos.</p></div>${can("SETTINGS_MANAGE")?'<button class="btn primary small" id="newSetting">+ Parámetro</button>':""}</div><div class="list settings-list">${visibleSettings.map(x=>`<div class="list-item setting-card"><div class="setting-card-main"><strong>${esc(settingName(x))}</strong><div class="muted">${esc(x.description||"")}</div><div class="setting-preview">${settingPreview(x)}</div></div>${can("SETTINGS_MANAGE")?`<button class="btn secondary small editSetting" data-id="${x.id}">Editar</button>`:""}</div>`).join("")}</div></div><div class="card"><div class="toolbar"><div><h2>Credenciales protegidas</h2><p class="muted">Contraseñas y claves se cifran en el servidor.</p></div>${can("SECRETS_MANAGE")?'<button class="btn primary small" id="newSecret">+ Guardar secreto</button>':""}</div><div class="section-note">Los valores protegidos nunca se muestran nuevamente en el navegador.</div><div class="list mt">${secrets.rows.map(x=>`<div class="list-item"><div><strong>${esc(x.scope)} · ${esc(x.key)}</strong><div class="muted">${esc(x.hint||"Configurado")} · ${esc(fmtDate(x.updated_at))}</div></div><span class="badge ok">PROTEGIDO</span></div>`).join("")||'<div class="empty">Sin secretos.</div>'}</div></div></div>`;
     $("#allowNegativeStock")?.addEventListener("change",async e=>{const input=e.currentTarget;input.disabled=true;try{await call("settings.save",{id:stockPolicy?.company_id===state.me.companyId?stockPolicy.id:undefined,module:"INVENTORY",key:"stock_policy",description:"Política global de stock para ventas",value:{allow_negative_stock:input.checked},global:false,company_id:company});toast(input.checked?"Venta sin stock habilitada":"Protección de stock habilitada");if(input.isConnected&&state.me?.companyId===company&&state.route==='settings')await render();}catch(err){input.checked=!input.checked;toast(errorText(err),true);input.disabled=false;}});
     $("#newSetting")?.addEventListener("click",()=>settingModal(null));
     $$('.editSetting').forEach(b=>b.addEventListener('click',()=>settingModal(visibleSettings.find(x=>x.id===b.dataset.id))));
     $("#newSecret")?.addEventListener("click",secretModal);
+    $("#systemBackupCreate")?.addEventListener('click',e=>createSystemBackup(e.currentTarget).catch(err=>toast(errorText(err),true)));
+    $$('[data-system-cleanup]').forEach(b=>b.addEventListener('click',()=>openSystemCleanup(b.dataset.systemCleanup,b)));
+    $$('[data-system-reset]').forEach(b=>b.addEventListener('click',()=>openSystemReset(b.dataset.systemReset,recovery)));
+    $("#systemBackupRestore")?.addEventListener('click',openRestoreBackup);
   }
   function genericSettingRows(value={}){
     const rows=Object.entries(value||{}); if(!rows.length) rows.push(['','']);

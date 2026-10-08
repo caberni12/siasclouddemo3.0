@@ -624,3 +624,28 @@ dialog{border:0;padding:0;background:transparent;max-width:none;max-height:none}
   .active-company-logo{width:42px;height:42px;min-width:42px;border-radius:11px}
   .active-company-logo img{padding:0;border-radius:9px}
 }
+
+/* SiasCloud 3.3.0 · Respaldo y reinicio controlado SUPERADMIN */
+.system-recovery-card{margin-top:18px;border:1px solid #d9e1ee;background:linear-gradient(180deg,#fff,#fbfcff)}
+.system-recovery-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+.system-recovery-actions .btn{min-height:42px}
+.system-recovery-actions .btn:disabled{opacity:.45;cursor:not-allowed}
+.reset-summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}
+.reset-summary-grid>div{padding:13px 14px;border:1px solid var(--line);border-radius:14px;background:#fff;display:grid;gap:4px}
+.reset-summary-grid small{color:var(--muted);font-weight:700}.reset-summary-grid strong{font-size:20px}
+.system-reset-confirm{display:grid;gap:15px}.system-reset-confirm textarea{min-height:88px}
+@media(max-width:800px){.reset-summary-grid{grid-template-columns:1fr 1fr}.system-recovery-actions .btn{flex:1 1 180px}}
+@media(max-width:480px){.reset-summary-grid{grid-template-columns:1fr}.system-recovery-actions{display:grid;grid-template-columns:1fr}.system-recovery-actions .btn{width:100%}}
+
+/* 3.3.0 · despliegue fluido: evita recalcular todo el ERP al expandir menú */
+@media (min-width:821px) and (hover:hover) and (pointer:fine){
+ .app.sias-hover-sidebar,.app.sias-hover-sidebar.sidebar-collapsed{
+    grid-template-columns:var(--sidebar-collapsed) minmax(0,1fr)!important;transition:none!important;
+ }
+ .app.sias-hover-sidebar .sidebar{width:var(--sidebar-w);box-shadow:12px 0 24px rgba(9,26,52,.13);transition:width .16s ease!important}
+ .app.sias-hover-sidebar.sidebar-collapsed .sidebar{width:var(--sidebar-collapsed);box-shadow:none}
+}
+/* Memoria economica: composicion reducida en equipos de 1–2 GB / pocos nucleos */
+.sias-eco .spinner{animation-duration:1.1s}
+.sias-eco .app,.sias-eco .sidebar{transition:none!important}
+.sias-eco .card,.sias-eco .modal,.sias-eco .toast{backdrop-filter:none!important}

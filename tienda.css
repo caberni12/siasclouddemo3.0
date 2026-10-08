@@ -383,3 +383,12 @@ main{max-width:1288px;margin:0 auto;padding:0 24px}
   .hero-slide-visual button{padding:18px 12px 116px!important}
   .hero-slide-visual img.hero-main-image{max-width:98%!important;max-height:78%!important;border-radius:16px!important}
 }
+
+/* 3.3.0 · slider GPU-friendly: composicion via transform, no filtro de 28px en cada fotograma */
+.hero-carousel-track{transform:translate3d(0,0,0);will-change:transform;backface-visibility:hidden}
+.hero-slide{contain:layout paint style}
+.hero-slide-visual .hero-backdrop{filter:blur(10px) brightness(.53)!important;transform:scale(1.015)!important}
+.sias-eco .hero-carousel-track{transition:none!important;will-change:auto}
+.sias-eco .hero-slide-visual .hero-backdrop{filter:brightness(.5)!important;opacity:.66!important}
+.sias-eco .hero-slide-visual img.hero-main-image{filter:none!important;box-shadow:none!important}
+.sias-eco .hero-carousel-nav button,.sias-eco .store-header{backdrop-filter:none!important}

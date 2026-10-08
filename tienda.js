@@ -106,7 +106,7 @@
             </div>
             <div class="hero-slide-visual">
               ${p.featured ? '<span class="hero-slide-badge">Destacado</span>' : ''}
-              ${p.image_url ? `<img class="hero-backdrop" src="${E(p.image_url)}" alt="" aria-hidden="true"><button type="button" data-product-image="${E(p.id)}" aria-label="Ampliar imagen de ${E(p.name)}"><img class="hero-main-image" src="${E(p.image_url)}" alt="${E(p.name)}"></button>` : ''}
+              ${p.image_url ? `<img class="hero-backdrop" src="${E(p.image_url)}" alt="" aria-hidden="true" decoding="async" loading="lazy"><button type="button" data-product-image="${E(p.id)}" aria-label="Ampliar imagen de ${E(p.name)}"><img class="hero-main-image" src="${E(p.image_url)}" alt="${E(p.name)}" decoding="async" loading="${i===0?'eager':'lazy'}" fetchpriority="${i===0?'high':'low'}"></button>` : ''}
             </div>
           </article>`).join('')}
       </div>
@@ -116,6 +116,9 @@
     const track = container.querySelector('.hero-carousel-track');
     const dots = [...container.querySelectorAll('[data-hero-dot]')];
     const count = items.length;
+    let heroVisible=true;
+    const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // Auto-rotación únicamente mientras el slider está visible.
     state.heroIndex = Math.min(state.heroIndex, count - 1);
     const paint = () => {
       track.style.transform = `translateX(-${state.heroIndex * 100}%)`;
@@ -125,7 +128,9 @@
     const go = index => { state.heroIndex = (index + count) % count; paint(); restartHeroTimer(); };
     const restartHeroTimer = () => {
       clearInterval(state.heroTimer);
-      if(count>1){ state.heroTimer = setInterval(()=>{ state.heroIndex=(state.heroIndex+1)%count; paint(); }, 5500); }
+      if(count>1 && !document.hidden && heroVisible && !reducedMotion){
+        state.heroTimer = setInterval(()=>{ if(document.hidden)return; state.heroIndex=(state.heroIndex+1)%count; requestAnimationFrame(paint); }, 5500);
+      }
     };
     container.querySelector('[data-hero-prev]')?.addEventListener('click',()=>go(state.heroIndex-1));
     container.querySelector('[data-hero-next]')?.addEventListener('click',()=>go(state.heroIndex+1));
@@ -134,6 +139,14 @@
     bindImageZoom(container);
     paint();
     restartHeroTimer();
+    if(state.heroVisibilityObserver)state.heroVisibilityObserver.disconnect();
+    state.heroVisibilityObserver=typeof IntersectionObserver==='function'?new IntersectionObserver(entries=>{
+      heroVisible=Boolean(entries[0]?.isIntersecting);restartHeroTimer();
+    },{threshold:.01}):null;
+    state.heroVisibilityObserver?.observe(container);
+    if(state.heroVisibilityHandler)document.removeEventListener('visibilitychange',state.heroVisibilityHandler);
+    state.heroVisibilityHandler=()=>restartHeroTimer();
+    document.addEventListener('visibilitychange',state.heroVisibilityHandler);
   }
 
   function renderCatalog(){

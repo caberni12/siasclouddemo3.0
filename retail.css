@@ -13,3 +13,17 @@
 /* Hotfix 2026-10-06: aplicación de saldos de notas de crédito en POS */
 .credit-use-control{display:flex;align-items:center;gap:8px;min-width:0}.credit-use-control input{min-width:0;flex:1}.credit-use-control .btn{white-space:nowrap}
 @media(max-width:820px){.credit-pay-row{grid-template-columns:1fr}.credit-use-control{width:100%}.credit-use-control input{width:100%}}
+
+/* 3.3.0 · trazabilidad documental desde el mismo modal de SiasCloud */
+.sias-trace-intro{font-size:12px;color:var(--muted);line-height:1.5;padding:10px 12px;border-radius:10px;background:var(--primary-soft)}
+.sias-trace-flow{margin-top:14px}
+.sias-trace-step{align-items:start;gap:12px}
+.sias-trace-copy{min-width:0;flex:1}
+.sias-trace-copy small{display:block;margin-top:4px}
+.sias-trace-actions{display:flex;flex-wrap:wrap;gap:6px}
+.sias-trace-detail{margin:12px 0 0;padding:12px;border:1px solid var(--border);border-radius:10px;background:var(--surface)}
+.sias-trace-meta{display:flex;gap:8px 18px;flex-wrap:wrap;font-size:11px;line-height:1.5}
+.sias-trace-subtitle{margin:12px 0 6px;font-size:11px;font-weight:800}
+.sias-trace-dte{display:flex;gap:8px;align-items:center;justify-content:space-between;margin:6px 0;flex-wrap:wrap;font-size:11px}
+.sias-trace-alert{padding:9px 11px;background:#fff4e0;color:#8c460a;border-radius:8px;font-weight:650;font-size:11px}
+@media(max-width:620px){.sias-trace-step{flex-direction:column}.sias-trace-actions{justify-content:flex-start}}
